@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4K FX Ultra — AI Video Enhancer</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#03050f; --card:#090e1e; --card2:#0c1228;
+  --neon:#00f0ff; --neon2:#ff0066; --neon3:#7c3aff;
+  --gold:#ffd700; --green:#00ff88; --text:#b8cce0; --dim:#3a5070;
+  --border:rgba(0,240,255,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,240,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,240,255,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 700px 500px at 10% 10%,rgba(124,58,255,0.05) 0%,transparent 70%),radial-gradient(ellipse 600px 400px at 90% 80%,rgba(0,240,255,0.04) 0%,transparent 70%);pointer-events:none;z-index:0;}
+.wrap{position:relative;z-index:1;max-width:820px;margin:0 auto;padding:0 18px 60px;}
+
+header{padding:36px 0 26px;text-align:center;}
+.logo{font-family:'Orbitron',monospace;font-size:clamp(28px,7vw,54px);font-weight:900;letter-spacing:4px;line-height:1;margin-bottom:8px;}
+.logo .c1{color:var(--neon);text-shadow:0 0 30px var(--neon),0 0 60px rgba(0,240,255,0.3);}
+.logo .c2{color:var(--neon2);text-shadow:0 0 30px var(--neon2);}
+.logo .c3{color:var(--text);}
+.badge{display:inline-block;padding:4px 14px;background:rgba(0,240,255,0.08);border:1px solid rgba(0,240,255,0.2);border-radius:20px;font-size:10px;letter-spacing:3px;color:var(--neon);margin-bottom:6px;}
+.sub{font-size:11px;letter-spacing:5px;color:var(--dim);}
+.hline{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--neon3),var(--neon),var(--neon3),transparent);margin-top:22px;animation:lp 3s ease-in-out infinite;}
+@keyframes lp{0%,100%{opacity:.4;}50%{opacity:1;}}
+
+/* API KEY */
+.api-section{background:var(--card);border:1px solid rgba(124,58,255,0.25);border-radius:16px;padding:20px;margin-bottom:22px;position:relative;overflow:hidden;}
+.api-section::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--neon3),transparent);}
+.panel-title{font-family:'Orbitron',monospace;font-size:11px;letter-spacing:3px;color:var(--neon3);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.panel-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+.api-row{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.api-input{flex:1;min-width:200px;padding:11px 14px;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;letter-spacing:1px;outline:none;transition:border-color 0.2s;}
+.api-input:focus{border-color:var(--neon3);}
+.api-input::placeholder{color:var(--dim);}
+.api-save-btn{padding:11px 18px;background:rgba(124,58,255,0.15);border:1px solid var(--neon3);border-radius:10px;color:var(--neon3);font-family:'Orbitron',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.api-save-btn:hover{background:rgba(124,58,255,0.25);box-shadow:0 0 16px rgba(124,58,255,0.3);}
+.api-hint{font-size:11px;color:var(--dim);letter-spacing:0.5px;line-height:1.7;}
+.api-hint a{color:var(--neon3);text-decoration:none;font-weight:600;}
+.api-status{display:flex;align-items:center;gap:6px;font-size:11px;letter-spacing:1px;margin-top:10px;}
+.api-dot{width:7px;height:7px;border-radius:50%;background:var(--dim);transition:all 0.3s;}
+.api-dot.ok{background:var(--green);box-shadow:0 0 8px var(--green);}
+
+/* UPLOAD */
+.upload-zone{border:2px dashed rgba(0,240,255,0.18);border-radius:20px;padding:46px 24px;text-align:center;cursor:pointer;transition:all 0.3s;background:rgba(0,240,255,0.015);margin-bottom:22px;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--neon);background:rgba(0,240,255,0.035);box-shadow:0 0 40px rgba(0,240,255,0.08);}
+.upload-icon{font-size:48px;margin-bottom:12px;display:block;animation:fi 3s ease-in-out infinite;}
+@keyframes fi{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.upload-title{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;color:var(--neon);letter-spacing:2px;margin-bottom:6px;}
+.upload-sub{font-size:12px;color:var(--dim);}
+.upload-sub span{color:var(--neon3);}
+input[type=file]{display:none;}
+
+/* FILE INFO */
+.file-info{display:none;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:22px;align-items:center;gap:12px;}
+.file-info.show{display:flex;}
+.file-icon{font-size:28px;}
+.file-details{flex:1;}
+.file-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;word-break:break-all;}
+.file-meta{font-size:11px;color:var(--dim);letter-spacing:1px;}
+.file-change{padding:7px 14px;background:transparent;border:1px solid rgba(255,0,102,0.3);border-radius:20px;color:var(--neon2);font-size:10px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;}
+.file-change:hover{border-color:var(--neon2);}
+
+/* CONTROLS */
+.controls{display:none;flex-direction:column;gap:18px;}
+.controls.show{display:flex;}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;position:relative;overflow:hidden;}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--neon3),transparent);}
+
+/* Quality */
+.q-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.q-btn{padding:12px 4px;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--dim);font-family:'Orbitron',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;transition:all 0.25s;text-align:center;}
+.q-btn:hover{border-color:var(--neon3);color:var(--neon3);}
+.q-btn.active{border-color:var(--neon);color:var(--neon);background:rgba(0,240,255,0.06);box-shadow:0 0 16px rgba(0,240,255,0.15);}
+.q-btn.gold.active{border-color:var(--gold);color:var(--gold);background:rgba(255,215,0,0.06);box-shadow:0 0 16px rgba(255,215,0,0.15);}
+
+/* Process btn */
+.process-btn{width:100%;padding:17px;background:linear-gradient(135deg,rgba(0,240,255,0.08),rgba(124,58,255,0.08));border:1.5px solid var(--neon);border-radius:14px;color:var(--neon);font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:4px;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden;}
+.process-btn:hover{box-shadow:0 0 40px rgba(0,240,255,0.25);transform:translateY(-2px);}
+.process-btn:active{transform:translateY(1px);}
+.process-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.process-btn span{position:relative;z-index:1;}
+
+/* Status */
+.status-panel{display:none;flex-direction:column;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;}
+.status-panel.show{display:flex;}
+.status-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.status-title{font-family:'Orbitron',monospace;font-size:12px;letter-spacing:2px;color:var(--neon);}
+.status-id{font-size:10px;color:var(--dim);letter-spacing:1px;}
+.progress-bg{background:var(--card2);border:1px solid var(--border);border-radius:20px;height:8px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--neon3),var(--neon),var(--neon2));border-radius:20px;width:0%;transition:width 0.5s ease;box-shadow:0 0 10px var(--neon);}
+.status-msg{font-size:12px;color:var(--dim);letter-spacing:1px;text-align:center;}
+.status-steps{display:flex;justify-content:space-between;gap:6px;}
+.step{flex:1;padding:8px 4px;background:var(--card2);border:1px solid var(--border);border-radius:8px;font-size:9px;letter-spacing:1px;color:var(--dim);text-align:center;transition:all 0.3s;}
+.step.active{border-color:var(--neon);color:var(--neon);background:rgba(0,240,255,0.06);}
+.step.done{border-color:var(--green);color:var(--green);background:rgba(0,255,136,0.05);}
+
+/* Result */
+.result-panel{display:none;flex-direction:column;gap:16px;background:rgba(0,255,136,0.03);border:1px solid rgba(0,255,136,0.2);border-radius:16px;padding:22px;text-align:center;}
+.result-panel.show{display:flex;}
+.result-title{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:var(--green);letter-spacing:3px;}
+.result-sub{font-size:11px;color:var(--dim);letter-spacing:1px;}
+.result-video{width:100%;border-radius:10px;max-height:320px;object-fit:contain;background:#000;border:1px solid var(--border);}
+.result-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.dl-btn{display:inline-block;padding:14px 36px;background:linear-gradient(135deg,rgba(0,255,136,0.12),rgba(0,240,255,0.08));border:1.5px solid var(--green);border-radius:50px;color:var(--green);font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:3px;cursor:pointer;transition:all 0.3s;text-decoration:none;}
+.dl-btn:hover{box-shadow:0 0 30px rgba(0,255,136,0.3);transform:scale(1.03);}
+.new-btn{padding:10px 22px;background:transparent;border:1px solid rgba(255,0,102,0.3);border-radius:30px;color:var(--neon2);font-size:11px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;}
+.new-btn:hover{border-color:var(--neon2);}
+
+/* Footer */
+footer{margin-top:50px;padding:24px;background:var(--card);border:1px solid var(--border);border-radius:16px;text-align:center;}
+.credit-label{font-size:9px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;margin-bottom:14px;}
+.credit-row{display:flex;justify-content:center;gap:28px;flex-wrap:wrap;margin-bottom:14px;}
+.credit-item{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.credit-platform{font-size:8px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;}
+.credit-name{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:1px;}
+.cn1{color:var(--neon);text-shadow:0 0 10px rgba(0,240,255,0.4);}
+.cn2{color:var(--neon2);text-shadow:0 0 10px rgba(255,0,102,0.4);}
+.cn3{color:var(--neon3);text-shadow:0 0 10px rgba(124,58,255,0.4);}
+.ver{font-family:'Orbitron',monospace;font-size:8px;color:rgba(124,58,255,0.3);letter-spacing:3px;}
+
+/* Notif */
+.notif{position:fixed;bottom:20px;right:20px;background:var(--card);border:1px solid var(--neon);border-radius:12px;padding:12px 18px;font-size:12px;color:var(--neon);letter-spacing:1px;box-shadow:0 0 20px rgba(0,240,255,0.15);transform:translateY(80px);opacity:0;transition:all 0.3s;z-index:100;max-width:270px;}
+.notif.show{transform:translateY(0);opacity:1;}
+.notif.err{border-color:var(--neon2);color:var(--neon2);}
+
+.scan{position:fixed;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,240,255,0.3),transparent);animation:sc 5s linear infinite;pointer-events:none;z-index:50;}
+@keyframes sc{0%{top:-2px}100%{top:100vh}}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<div class="wrap">
+
+  <header>
+    <div class="logo"><span class="c1">4K</span> <span class="c2">FX</span> <span class="c3">ULTRA</span></div>
+    <div class="badge">POWERED BY REAL-ESRGAN AI</div>
+    <div class="sub">AI VIDEO ENHANCEMENT SYSTEM</div>
+    <div class="hline"></div>
+  </header>
+
+  <!-- API KEY -->
+  <div class="api-section">
+    <div class="panel-title">🔑 Replicate API Key</div>
+    <div class="api-row">
+      <input type="password" class="api-input" id="apiKeyInput" placeholder="r8_xxxxxxxxxxxxxxxxxxxx">
+      <button class="api-save-btn" id="apiSaveBtn">SIMPAN</button>
+    </div>
+    <div class="api-hint">
+      1. Daftar gratis di <a href="https://replicate.com" target="_blank">replicate.com</a><br>
+      2. Klik foto profil → <strong>API Tokens</strong> → <strong>Create token</strong><br>
+      3. Paste token di sini → klik Simpan ✓
+    </div>
+    <div class="api-status">
+      <div class="api-dot" id="apiDot"></div>
+      <span id="apiStatusText">API Key belum diset</span>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" id="fileInput" accept="video/*">
+    <span class="upload-icon">🎬</span>
+    <div class="upload-title">DROP VIDEO DI SINI</div>
+    <div class="upload-sub">atau ketuk untuk pilih — <span>MP4, MOV, WebM</span></div>
+  </div>
+
+  <!-- FILE INFO -->
+  <div class="file-info" id="fileInfo">
+    <div class="file-icon">🎥</div>
+    <div class="file-details">
+      <div class="file-name" id="fileName">—</div>
+      <div class="file-meta" id="fileMeta">—</div>
+    </div>
+    <button class="file-change" id="fileChange">↺ GANTI</button>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls" id="controls">
+
+    <div class="panel">
+      <div class="panel-title">⚡ Target Kualitas Output</div>
+      <div class="q-grid">
+        <button class="q-btn" data-q="SD">SD</button>
+        <button class="q-btn active" data-q="HD">HD 720P</button>
+        <button class="q-btn" data-q="FHD">FHD 1080P</button>
+        <button class="q-btn gold" data-q="4K">4K ✦</button>
+      </div>
+    </div>
+
+    <button class="process-btn" id="processBtn"><span>⚡ MULAI AI ENHANCE</span></button>
+
+    <!-- Status Steps -->
+    <div class="status-panel" id="statusPanel">
+      <div class="status-header">
+        <div class="status-title">⏳ MEMPROSES VIDEO</div>
+        <div class="status-id" id="predId"></div>
+      </div>
+      <div class="status-steps">
+        <div class="step" id="s1">UPLOAD</div>
+        <div class="step" id="s2">QUEUE</div>
+        <div class="step" id="s3">AI PROSES</div>
+        <div class="step" id="s4">SELESAI</div>
+      </div>
+      <div class="progress-bg"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="status-msg" id="statusMsg">Mempersiapkan...</div>
+    </div>
+
+    <!-- Result -->
+    <div class="result-panel" id="resultPanel">
+      <div class="result-title">✓ AI ENHANCEMENT SELESAI!</div>
+      <video class="result-video" id="resultVideo" controls playsinline></video>
+      <div class="result-sub" id="resultInfo"></div>
+      <div class="result-actions">
+        <a class="dl-btn" id="dlBtn" target="_blank" download>⬇ DOWNLOAD VIDEO</a>
+        <button class="new-btn" id="newBtn">↺ VIDEO BARU</button>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <div class="credit-label">✦ Created by ✦</div>
+    <div class="credit-row">
+      <div class="credit-item">
+        <div class="credit-platform">TikTok</div>
+        <div class="credit-name cn1">@D4nzxml</div>
+      </div>
+      <div class="credit-item">
+        <div class="credit-platform">Instagram</div>
+        <div class="credit-name cn2">@DadanRi</div>
+      </div>
+      <div class="credit-item">
+        <div class="credit-platform">Telegram</div>
+        <div class="credit-name cn3">@KenzinTzy</div>
+      </div>
+    </div>
+    <div class="ver">4K FX ULTRA — v4.0.0 — REAL-ESRGAN AI</div>
+  </footer>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+let apiKey = localStorage.getItem('fx_apikey') || '';
+let selFile = null;
+let selQ = 'HD';
+
+const $ = id => document.getElementById(id);
+const apiKeyInput = $('apiKeyInput');
+const apiDot      = $('apiDot');
+const apiStatusTxt= $('apiStatusText');
+const uploadZone  = $('uploadZone');
+const fileInput   = $('fileInput');
+const fileInfo    = $('fileInfo');
+const controls    = $('controls');
+const processBtn  = $('processBtn');
+const statusPanel = $('statusPanel');
+const resultPanel = $('resultPanel');
+const notif       = $('notif');
+
+// Init
+if (apiKey) { apiKeyInput.value = apiKey; setApiOk(true); }
+
+// API Key
+$('apiSaveBtn').addEventListener('click', () => {
+  const v = apiKeyInput.value.trim();
+  if (!v) return toast('⚠ Masukkan API key dulu!', true);
+  apiKey = v;
+  localStorage.setItem('fx_apikey', v);
+  setApiOk(true);
+  toast('✓ API Key tersimpan!');
+});
+
+function setApiOk(ok) {
+  apiDot.className = 'api-dot' + (ok ? ' ok' : '');
+  apiStatusTxt.textContent = ok ? '✓ API Key aktif — Siap digunakan' : 'API Key belum diset';
+}
+
+// Upload
+uploadZone.addEventListener('click', () => fileInput.click());
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault(); uploadZone.classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if (f?.type.startsWith('video/')) loadFile(f);
+  else toast('⚠ File harus video!', true);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
+$('fileChange').addEventListener('click', () => fileInput.click());
+
+function loadFile(f) {
+  selFile = f;
+  $('fileName').textContent = f.name;
+  $('fileMeta').textContent = `${(f.size/1024/1024).toFixed(2)} MB — ${f.type || 'video'}`;
+  uploadZone.style.display = 'none';
+  fileInfo.classList.add('show');
+  controls.classList.add('show');
+  resultPanel.classList.remove('show');
+  statusPanel.classList.remove('show');
+  toast('✓ Video siap!');
+}
+
+// Quality
+document.querySelectorAll('.q-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); selQ = btn.dataset.q;
+  });
+});
+
+// Process
+processBtn.addEventListener('click', async () => {
+  if (!apiKey) return toast('⚠ Set API Key Replicate dulu!', true);
+  if (!selFile) return toast('⚠ Upload video dulu!', true);
+
+  processBtn.disabled = true;
+  processBtn.querySelector('span').textContent = '⏳ MENGUPLOAD...';
+  statusPanel.classList.add('show');
+  resultPanel.classList.remove('show');
+  setStep(1); setProgress(5, 'Mengupload video...');
+
+  try {
+    // Upload via proxy
+    const form = new FormData();
+    form.append('file', selFile);
+    const upRes = await fetch('https://file.io/?expires=1d', { method:'POST', body:form });
+    const upData = await upRes.json();
+    if (!upData.success) throw new Error('Upload gagal: ' + upData.message);
+    const videoUrl = upData.link;
+
+    setProgress(25, 'Video terupload! Mengirim ke AI...');
+    setStep(2);
+
+    // Create prediction via our proxy
+    const createRes = await fetch('/api/replicate?action=create', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'x-api-key': apiKey },
+      body: JSON.stringify({ videoUrl, quality: selQ })
+    });
+    const createData = await createRes.json();
+    if (!createRes.ok) throw new Error(createData.error || 'Gagal create prediction');
+
+    const predId = createData.id;
+    $('predId').textContent = 'ID: ' + predId.slice(0,10) + '...';
+    setProgress(35, 'Video masuk antrian AI...');
+
+    // Poll
+    const outputUrl = await pollResult(predId);
+
+    setProgress(100, '✓ Selesai!');
+    setStep(4);
+
+    setTimeout(() => {
+      statusPanel.classList.remove('show');
+      resultPanel.classList.add('show');
+      $('resultVideo').src = outputUrl;
+      $('dlBtn').href = outputUrl;
+      $('resultInfo').textContent = `Kualitas: ${selQ} • Powered by Real-ESRGAN AI`;
+      toast('🔥 Video berhasil di-enhance!');
+    }, 600);
+
+  } catch(e) {
+    toast('❌ ' + e.message, true);
+    setProgress(0, '❌ ' + e.message);
+  }
+
+  processBtn.disabled = false;
+  processBtn.querySelector('span').textContent = '⚡ MULAI AI ENHANCE';
+});
+
+async function pollResult(id) {
+  let attempts = 0;
+  const max = 180;
+  while (attempts < max) {
+    attempts++;
+    await sleep(3000);
+
+    const res = await fetch(`/api/replicate?action=poll&id=${id}`, {
+      headers: { 'x-api-key': apiKey }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Poll error');
+
+    const pct = Math.min(92, 35 + (attempts/max)*57);
+
+    if (data.status === 'succeeded') {
+      const out = Array.isArray(data.output) ? data.output[0] : data.output;
+      if (!out) throw new Error('Output kosong dari AI');
+      return out;
+    }
+    if (data.status === 'failed') throw new Error(data.error || 'AI prediction gagal');
+    if (data.status === 'processing') { setStep(3); setProgress(pct, `AI sedang memproses... (${attempts*3}s)`); }
+    else if (data.status === 'starting') { setStep(2); setProgress(32, 'AI model loading...'); }
+  }
+  throw new Error('Timeout — video terlalu besar atau server sibuk, coba lagi');
+}
+
+function setStep(n) {
+  ['s1','s2','s3','s4'].forEach((id,i) => {
+    const el = $(id);
+    el.className = 'step' + (i+1<n?' done':i+1===n?' active':'');
+  });
+}
+function setProgress(pct, msg) {
+  $('progressFill').style.width = pct + '%';
+  $('statusMsg').textContent = msg;
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+$('newBtn').addEventListener('click', () => {
+  selFile = null; fileInput.value = '';
+  uploadZone.style.display = '';
+  fileInfo.classList.remove('show');
+  controls.classList.remove('show');
+  resultPanel.classList.remove('show');
+  statusPanel.classList.remove('show');
+});
+
+let notifT;
+function toast(msg, err=false) {
+  notif.textContent = msg;
+  notif.className = 'notif show' + (err?' err':'');
+  clearTimeout(notifT);
+  notifT = setTimeout(() => notif.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
