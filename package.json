@@ -1,8 +1,5 @@
 {
   "name": "4kfx-ultra",
   "version": "1.0.0",
-  "description": "AI Video Enhancer powered by Real-ESRGAN",
-  "scripts": {
-    "dev": "vercel dev"
-  }
+  "type": "module"
 }
