@@ -1,28 +1,23 @@
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key, Content-Length');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const { action } = req.query;
   const apiKey = req.headers['x-api-key'];
   if (!apiKey) return res.status(401).json({ error: 'API key required' });
 
-  const readBody = (r) => new Promise((resolve, reject) => {
-    const chunks = [];
-    r.on('data', c => chunks.push(c));
-    r.on('end', () => resolve(Buffer.concat(chunks)));
-    r.on('error', reject);
-  });
-
   try {
     if (action === 'upload' && req.method === 'POST') {
-      const buffer = await readBody(req);
+      const { data, type } = req.body;
+      if (!data) return res.status(400).json({ error: 'Missing content' });
+      const buffer = Buffer.from(data, 'base64');
       const upRes = await fetch('https://api.replicate.com/v1/files', {
         method: 'POST',
         headers: {
           'Authorization': 'Token ' + apiKey,
-          'Content-Type': req.headers['content-type'] || 'video/mp4',
+          'Content-Type': type || 'video/mp4',
           'Content-Length': String(buffer.length)
         },
         body: buffer
@@ -30,19 +25,18 @@ module.exports = async function handler(req, res) {
       const upData = await upRes.json();
       if (!upRes.ok) return res.status(upRes.status).json({ error: upData.detail || 'Upload gagal' });
       const url = (upData.urls && upData.urls.source) || upData.url;
-      return res.status(200).json({ url: url });
+      return res.status(200).json({ url });
     }
 
     if (action === 'create' && req.method === 'POST') {
-      const buffer = await readBody(req);
-      const body = JSON.parse(buffer.toString());
+      const { videoUrl, quality } = req.body;
       const scaleMap = { SD: 2, HD: 2, FHD: 4, '4K': 4 };
       const payload = {
         version: 'b8c9d67e0d8bdc3ee15e0e65b4b4c86e29af4c11e8ccc4aa1e56c3b3c4bc1b4',
         input: {
-          video_path: body.videoUrl,
+          video_path: videoUrl,
           model: 'RealESRGAN_x4plus',
-          scale: scaleMap[body.quality] || 2
+          scale: scaleMap[quality] || 2
         }
       };
       const response = await fetch('https://api.replicate.com/v1/predictions', {
@@ -69,8 +63,4 @@ module.exports = async function handler(req, res) {
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
-};
-
-module.exports.config = {
-  api: { bodyParser: false }
 };
