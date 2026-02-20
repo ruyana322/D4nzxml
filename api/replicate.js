@@ -29,7 +29,8 @@ module.exports = async function handler(req, res) {
       });
       const upData = await upRes.json();
       if (!upRes.ok) return res.status(upRes.status).json({ error: upData.detail || 'Upload gagal' });
-      return res.status(200).json({ url: upData.urls?.source || upData.url });
+      const url = (upData.urls && upData.urls.source) || upData.url;
+      return res.status(200).json({ url: url });
     }
 
     if (action === 'create' && req.method === 'POST') {
@@ -68,4 +69,8 @@ module.exports = async function handler(req, res) {
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
+};
+
+module.exports.config = {
+  api: { bodyParser: false }
 };
