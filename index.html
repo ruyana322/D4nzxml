@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>4KFX Ultra</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#f0f0f0;font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 60px}
+.logo{font-size:13px;letter-spacing:8px;color:#666;text-transform:uppercase;margin:32px 0 40px}
+.logo span{color:#fff;font-weight:600}
+.box{width:100%;max-width:520px;background:#141414;border:1px solid #222;border-radius:20px;padding:20px;margin-bottom:12px}
+.label{font-size:10px;letter-spacing:3px;color:#444;text-transform:uppercase;margin-bottom:12px}
+.row{display:flex;gap:8px}
+input[type=password],input[type=text]{flex:1;background:#0a0a0a;border:1px solid #222;border-radius:10px;padding:11px 14px;color:#f0f0f0;font-family:'Inter',sans-serif;font-size:13px;outline:none}
+input:focus{border-color:#fff}
+input::placeholder{color:#333}
+.btn{padding:11px 18px;background:#fff;border:none;border-radius:10px;color:#0a0a0a;font-weight:600;font-size:12px;cursor:pointer;white-space:nowrap;transition:opacity .2s}
+.btn:hover{opacity:.85}
+.btn.ghost{background:transparent;border:1px solid #333;color:#888;padding:7px 14px;font-size:11px}
+.btn.ghost:hover{border-color:#fff;color:#fff}
+.status-row{display:flex;align-items:center;gap:8px;margin-top:12px}
+.dot{width:6px;height:6px;border-radius:50%;background:#333;flex-shrink:0}
+.dot.on{background:#22c55e;box-shadow:0 0 8px #22c55e}
+.status-txt{font-size:11px;color:#555}
+.drop{border:1px dashed #222;border-radius:16px;padding:48px 24px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:12px;width:100%;max-width:520px}
+.drop:hover,.drop.drag{border-color:#fff;background:rgba(255,255,255,.02)}
+.drop-icon{font-size:32px;display:block;margin-bottom:12px}
+.drop-title{font-size:15px;font-weight:500;margin-bottom:4px}
+.drop-sub{font-size:11px;color:#444}
+input[type=file]{display:none}
+.finfo{display:none;width:100%;max-width:520px;background:#141414;border:1px solid #222;border-radius:14px;padding:14px 16px;align-items:center;gap:12px;margin-bottom:12px}
+.finfo.show{display:flex}
+.fname{font-size:13px;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fmeta{font-size:10px;color:#555;margin-top:2px}
+.ctrls{display:none;flex-direction:column;gap:10px;width:100%;max-width:520px}
+.ctrls.show{display:flex}
+.qg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.qb{padding:12px 4px;background:#0a0a0a;border:1px solid #222;border-radius:10px;color:#555;font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;text-align:center}
+.qb .qs{font-size:8px;display:block;margin-top:2px;opacity:.6}
+.qb:hover{border-color:#555;color:#fff}
+.qb.active{border-color:#fff;color:#fff;background:#141414}
+.go{width:100%;padding:15px;background:#fff;border:none;border-radius:14px;color:#0a0a0a;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .2s;letter-spacing:1px}
+.go:hover{opacity:.9}
+.go:disabled{opacity:.3;cursor:not-allowed}
+.prog-wrap{display:none;width:100%;max-width:520px}
+.prog-wrap.show{display:block}
+.prog-lbl{display:flex;justify-content:space-between;font-size:10px;color:#444;letter-spacing:2px;margin-bottom:6px}
+.prog-lbl span{color:#fff}
+.track{background:#1a1a1a;border-radius:100px;height:3px}
+.fill{height:100%;width:0%;border-radius:100px;background:#fff;transition:width .3s}
+.state{display:none;width:100%;max-width:520px;background:#141414;border:1px solid #222;border-radius:16px;padding:18px}
+.state.show{display:block}
+.state-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.state-title{font-size:10px;letter-spacing:3px;color:#666}
+.state-id{font-size:9px;color:#333;font-family:monospace}
+.steps{display:flex;gap:5px;margin-bottom:12px}
+.step{flex:1;padding:7px 2px;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;font-size:8px;letter-spacing:1px;color:#333;text-align:center;transition:all .3s}
+.step.on{border-color:#fff;color:#fff}
+.step.done{border-color:#22c55e;color:#22c55e}
+.track2{background:#1a1a1a;border-radius:100px;height:3px;margin-bottom:10px}
+.fill2{height:100%;width:0%;border-radius:100px;background:linear-gradient(90deg,#666,#fff);transition:width .5s}
+.state-msg{font-size:11px;color:#444;text-align:center;letter-spacing:1px}
+.result{display:none;width:100%;max-width:520px;background:#141414;border:1px solid #1f2f1f;border-radius:16px;padding:20px;text-align:center}
+.result.show{display:flex;flex-direction:column;gap:14px}
+.res-title{font-size:12px;letter-spacing:4px;color:#22c55e}
+video{width:100%;border-radius:10px;max-height:260px;background:#000}
+.res-sub{font-size:10px;color:#444;letter-spacing:1px}
+.res-btns{display:flex;gap:8px;justify-content:center}
+.bdl{display:inline-block;padding:11px 28px;background:#22c55e;border:none;border-radius:10px;color:#0a0a0a;font-weight:600;font-size:12px;text-decoration:none;transition:opacity .2s}
+.bdl:hover{opacity:.85}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:11px 20px;font-size:12px;color:#fff;opacity:0;transition:all .3s;white-space:nowrap;z-index:99}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.err{border-color:#ef4444;color:#ef4444}
+.credit{margin-top:32px;text-align:center}
+.credit p{font-size:9px;letter-spacing:3px;color:#333;margin-bottom:8px}
+.credit-names{display:flex;gap:20px;justify-content:center}
+.cn{font-size:11px;font-weight:600;color:#555}
+</style>
+</head>
+<body>
+
+<div class="logo">4K<span>FX</span> ULTRA</div>
+
+<!-- API KEY -->
+<div class="box">
+  <div class="label">API Key</div>
+  <div class="row">
+    <input type="password" id="keyInput" placeholder="r8_xxxxxxxxxxxxxxxxxxxx">
+    <button class="btn" id="saveBtn">Simpan</button>
+  </div>
+  <div class="status-row">
+    <div class="dot" id="dot"></div>
+    <div class="status-txt" id="stxt">API Key belum diset</div>
+  </div>
+</div>
+
+<!-- UPLOAD -->
+<div class="drop" id="drop">
+  <input type="file" id="fileInput" accept="video/*">
+  <span class="drop-icon">🎬</span>
+  <div class="drop-title">Pilih atau drop video</div>
+  <div class="drop-sub">MP4 · MOV · WebM · Maks 4MB</div>
+</div>
+
+<!-- FILE INFO -->
+<div class="finfo" id="finfo">
+  <div style="font-size:22px">🎥</div>
+  <div style="flex:1;min-width:0">
+    <div class="fname" id="fname">—</div>
+    <div class="fmeta" id="fmeta">—</div>
+  </div>
+  <button class="btn ghost" id="fchange">Ganti</button>
+</div>
+
+<!-- CONTROLS -->
+<div class="ctrls" id="ctrls">
+  <div class="box" style="padding:16px">
+    <div class="label">Kualitas</div>
+    <div class="qg">
+      <button class="qb" data-q="SD">SD<span class="qs">480p</span></button>
+      <button class="qb active" data-q="HD">HD<span class="qs">720p</span></button>
+      <button class="qb" data-q="FHD">FHD<span class="qs">1080p</span></button>
+      <button class="qb" data-q="4K">4K<span class="qs">Ultra</span></button>
+    </div>
+  </div>
+  <button class="go" id="goBtn">Mulai Enhance</button>
+
+  <!-- UPLOAD PROGRESS -->
+  <div class="prog-wrap" id="progWrap">
+    <div class="prog-lbl">UPLOAD<span id="pct">0%</span></div>
+    <div class="track"><div class="fill" id="fillBar"></div></div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="state" id="stateBox">
+    <div class="state-top">
+      <div class="state-title">MEMPROSES</div>
+      <div class="state-id" id="predId"></div>
+    </div>
+    <div class="steps">
+      <div class="step" id="s1">UPLOAD</div>
+      <div class="step" id="s2">QUEUE</div>
+      <div class="step" id="s3">AI</div>
+      <div class="step" id="s4">DONE</div>
+    </div>
+    <div class="track2"><div class="fill2" id="fill2"></div></div>
+    <div class="state-msg" id="smsg">Mempersiapkan...</div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result" id="result">
+    <div class="res-title">✓ SELESAI</div>
+    <video id="vid" controls playsinline></video>
+    <div class="res-sub" id="rsub"></div>
+    <div class="res-btns">
+      <a class="bdl" id="dlBtn" target="_blank" download>↓ Download</a>
+      <button class="btn ghost" id="newBtn">Video Baru</button>
+    </div>
+  </div>
+</div>
+
+<div class="credit">
+  <p>CREATED BY</p>
+  <div class="credit-names">
+    <span class="cn">@D4nzxml</span>
+    <span class="cn">@DadanRi</span>
+    <span class="cn">@KenzinTzy</span>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var key='',file=null,q='HD';
+var $=function(id){return document.getElementById(id)};
+
+var saved=localStorage.getItem('fxkey');
+if(saved){key=saved;$('keyInput').value=saved;setKey(true);}
+
+$('saveBtn').onclick=function(){
+  var v=$('keyInput').value.trim();
+  if(!v)return toast('Masukkan API key!',1);
+  if(!v.startsWith('r8_'))return toast('Token harus diawali r8_',1);
+  key=v;localStorage.setItem('fxkey',v);setKey(true);toast('API Key tersimpan!');
+};
+
+function setKey(ok){
+  $('dot').className='dot'+(ok?' on':'');
+  $('stxt').textContent=ok?'✓ API Key aktif':'API Key belum diset';
+}
+
+var drop=$('drop');
+drop.onclick=function(){$('fileInput').click()};
+drop.ondragover=function(e){e.preventDefault();drop.classList.add('drag')};
+drop.ondragleave=function(){drop.classList.remove('drag')};
+drop.ondrop=function(e){
+  e.preventDefault();drop.classList.remove('drag');
+  var f=e.dataTransfer.files[0];
+  if(f&&f.type.startsWith('video/'))loadFile(f);
+  else toast('Harus file video!',1);
+};
+$('fileInput').onchange=function(){if(this.files[0])loadFile(this.files[0])};
+$('fchange').onclick=function(){$('fileInput').click()};
+
+function loadFile(f){
+  if(f.size>4*1024*1024)return toast('Maks 4MB! Kompres dulu.',1);
+  file=f;
+  $('fname').textContent=f.name;
+  $('fmeta').textContent=(f.size/1024/1024).toFixed(1)+' MB · '+( f.type||'video');
+  drop.style.display='none';
+  $('finfo').classList.add('show');
+  $('ctrls').classList.add('show');
+  $('result').classList.remove('show');
+  $('stateBox').classList.remove('show');
+  toast('Video siap!');
+}
+
+document.querySelectorAll('.qb').forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll('.qb').forEach(function(x){x.classList.remove('active')});
+    b.classList.add('active');q=b.dataset.q;
+  };
+});
+
+$('goBtn').onclick=async function(){
+  if(!key)return toast('Set API key dulu!',1);
+  if(!file)return toast('Pilih video dulu!',1);
+  $('goBtn').disabled=true;$('goBtn').textContent='Memproses...';
+  $('stateBox').classList.add('show');
+  $('result').classList.remove('show');
+  $('progWrap').classList.add('show');
+  setStep(1);setP(5,'Mengupload...');
+  try{
+    var url=await upload(file);
+    $('progWrap').classList.remove('show');
+    setP(32,'Upload sukses!');setStep(2);
+    var cr=await fetch('/api/replicate?action=create',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key},
+      body:JSON.stringify({videoUrl:url,quality:q})
+    });
+    var cd=await cr.json();
+    if(!cr.ok)throw new Error(cd.error||'Gagal create');
+    $('predId').textContent='ID: '+cd.id.slice(0,8)+'...';
+    setP(40,'Antrian AI...');setStep(2);
+    var out=await poll(cd.id);
+    setP(100,'Selesai!');setStep(4);
+    await sleep(500);
+    $('stateBox').classList.remove('show');
+    $('result').classList.add('show');
+    $('vid').src=out;$('dlBtn').href=out;
+    $('rsub').textContent='Kualitas: '+q+' · Real-ESRGAN AI';
+    toast('Video berhasil di-enhance!');
+  }catch(e){
+    $('progWrap').classList.remove('show');
+    toast(e.message,1);setP(0,'❌ '+e.message);
+  }
+  $('goBtn').disabled=false;$('goBtn').textContent='Mulai Enhance';
+};
+
+function upload(f){
+  return new Promise(function(res,rej){
+    var x=new XMLHttpRequest();
+    x.upload.onprogress=function(e){
+      if(e.lengthComputable){
+        var p=Math.round(e.loaded/e.total*100);
+        $('fillBar').style.width=p+'%';$('pct').textContent=p+'%';
+        setP(Math.round(5+p*0.25),'Upload '+p+'%');
+      }
+    };
+    x.onload=function(){
+      if(x.status>=200&&x.status<300){
+        try{var d=JSON.parse(x.responseText);if(!d.url)rej(new Error('URL tidak ada'));else res(d.url);}
+        catch(e){rej(new Error('Response tidak valid'));}
+      }else{
+        try{var e=JSON.parse(x.responseText);rej(new Error(e.error||'HTTP '+x.status));}
+        catch(e2){rej(new Error('Upload gagal HTTP '+x.status));}
+      }
+    };
+    x.onerror=function(){rej(new Error('Koneksi gagal. Coba lagi.'))};
+    x.ontimeout=function(){rej(new Error('Timeout. Video terlalu besar.'))};
+    x.open('POST','/api/replicate?action=upload');
+    x.setRequestHeader('x-api-key',key);
+    x.setRequestHeader('Content-Type',f.type||'video/mp4');
+    x.timeout=120000;x.send(f);
+  });
+}
+
+async function poll(id){
+  for(var n=0;n<180;n++){
+    await sleep(3000);
+    var r=await fetch('/api/replicate?action=poll&id='+id,{headers:{'x-api-key':key}});
+    var d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Poll error');
+    var p=Math.min(95,40+(n/180)*55);
+    if(d.status==='succeeded'){
+      var o=Array.isArray(d.output)?d.output[0]:d.output;
+      if(!o)throw new Error('Output kosong');
+      return o;
+    }
+    if(d.status==='failed')throw new Error(d.error||'AI gagal');
+    if(d.status==='processing'){setStep(3);setP(p,'AI memproses... '+n*3+'s');}
+    else if(d.status==='starting'){setStep(2);setP(42,'AI loading...');}
+  }
+  throw new Error('Timeout. Coba video lebih pendek.');
+}
+
+function setStep(n){
+  ['s1','s2','s3','s4'].forEach(function(id,i){
+    $(id).className='step'+(i+1<n?' done':i+1===n?' on':'');
+  });
+}
+function setP(p,m){$('fill2').style.width=p+'%';$('smsg').textContent=m;}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)});}
+
+$('newBtn').onclick=function(){
+  file=null;$('fileInput').value='';
+  drop.style.display='';$('finfo').classList.remove('show');
+  $('ctrls').classList.remove('show');$('result').classList.remove('show');
+  $('stateBox').classList.remove('show');$('progWrap').classList.remove('show');
+  $('vid').src='';$('fillBar').style.width='0%';
+};
+
+var tt;
+function toast(m,e){
+  var t=$('toast');t.textContent=m;
+  t.className='toast show'+(e?' err':'');
+  clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},3000);
+}
+</script>
+</body>
+</html>
