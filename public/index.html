@@ -260,16 +260,29 @@ $('goBtn').onclick=async function(){
   $('goBtn').disabled=false;$('goBtn').textContent='Mulai Enhance';
 };
 
-function upload(f){
-  return new Promise(function(res,rej){
-    var x=new XMLHttpRequest();
-    x.upload.onprogress=function(e){
-      if(e.lengthComputable){
-        var p=Math.round(e.loaded/e.total*100);
-        $('fillBar').style.width=p+'%';$('pct').textContent=p+'%';
-        setP(Math.round(5+p*0.25),'Upload '+p+'%');
-      }
+function upload(f) {
+  return new Promise(function(res, rej) {
+    var reader = new FileReader();
+    reader.onload = async function(e) {
+      try {
+        var base64 = e.target.result.split(',')[1];
+        setP(20, 'Mengupload...');
+        $('fillBar').style.width = '50%';
+        $('pct').textContent = '50%';
+        var r = await fetch('/api/replicate?action=upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+          body: JSON.stringify({ data: base64, type: f.type || 'video/mp4' })
+        });
+        var d = await r.json();
+        if (!r.ok) rej(new Error(d.error || 'Upload gagal'));
+        else res(d.url);
+      } catch(err) { rej(err); }
     };
+    reader.onerror = function() { rej(new Error('Gagal baca file')); };
+    reader.readAsDataURL(f);
+  });
+}
     x.onload=function(){
       if(x.status>=200&&x.status<300){
         try{var d=JSON.parse(x.responseText);if(!d.url)rej(new Error('URL tidak ada'));else res(d.url);}
