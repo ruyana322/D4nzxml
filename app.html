@@ -1,892 +1,1201 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Container Transplant — D4nzxml</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg: #06060a;
-  --surface: #0e0e16;
-  --border: #1e1e30;
-  --accent: #ff3e6c;
-  --accent2: #ff8c42;
-  --cyan: #00f5d4;
-  --text: #e8e8f0;
-  --muted: #666680;
-  --success: #00f5d4;
-  --error: #ff3e6c;
-  --warn: #ff8c42;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  background:var(--bg);color:var(--text);
-  font-family:'Syne',sans-serif;
-  min-height:100vh;
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -20%,#ff3e6c18,transparent),
-    radial-gradient(ellipse 60% 40% at 80% 80%,#00f5d408,transparent);
-}
-.noise{
-  position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  opacity:.4;
-}
-.wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:24px 16px 60px}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>D4nzxml Video Tool Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+  <style>
+    :root {
+      --bg: #000000;
+      --surface: rgba(255,255,255,0.03);
+      --surface-hover: rgba(255,255,255,0.06);
+      --glass: rgba(15,15,25,0.55);
+      --border: rgba(255,255,255,0.08);
+      --border-hover: rgba(0,210,255,0.25);
+      --text: #e8f0ff;
+      --text-muted: #6a7e9a;
+      --accent: #00d2ff;
+      --accent-glow: rgba(0,210,255,0.35);
+      --accent2: #0088cc;
+      --success: #00e887;
+      --error: #ff4d6a;
+      --warn: #ffb740;
+      --purple: #a855f7;
+      --radius: 24px;
+      --radius-sm: 16px;
+    }
 
-/* HEADER */
-header{text-align:center;padding:40px 0 32px}
-.logo{
-  font-size:11px;letter-spacing:4px;color:var(--accent);
-  font-family:'Space Mono',monospace;margin-bottom:12px;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-}
-.logo::before,.logo::after{content:'';flex:1;height:1px;background:var(--accent);opacity:.3}
-h1{font-size:clamp(28px,6vw,48px);font-weight:800;line-height:1.1;
-  background:linear-gradient(135deg,#fff 0%,#ff8c42 50%,#ff3e6c 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.subtitle{font-size:13px;color:var(--muted);margin-top:10px;font-family:'Space Mono',monospace}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* STEPS */
-.steps{display:flex;gap:8px;margin:28px 0 24px;justify-content:center;flex-wrap:wrap}
-.step{
-  display:flex;align-items:center;gap:6px;
-  font-size:11px;font-family:'Space Mono',monospace;
-  color:var(--muted);letter-spacing:1px;
-}
-.step-num{
-  width:22px;height:22px;border-radius:50%;
-  border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;
-  font-size:10px;color:var(--muted);flex-shrink:0;
-  transition:all .3s;
-}
-.step.active .step-num{border-color:var(--accent);color:var(--accent);box-shadow:0 0 8px var(--accent)44}
-.step.done .step-num{background:var(--accent);border-color:var(--accent);color:#fff}
-.step-arrow{color:var(--border);font-size:10px}
+    html, body {
+      width: 100%; min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-/* CARDS */
-.card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:16px;padding:20px;margin-bottom:16px;
-  transition:border-color .3s;
-}
-.card.active-card{border-color:var(--accent)44}
-.card-label{
-  font-size:10px;letter-spacing:3px;color:var(--accent);
-  font-family:'Space Mono',monospace;margin-bottom:14px;
-  display:flex;align-items:center;gap:8px;
-}
-.card-label::after{content:'';flex:1;height:1px;background:var(--accent);opacity:.2}
+    /* Background Effects */
+    .bg-layer {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,210,255,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(168,85,247,0.04) 0%, transparent 50%);
+    }
+    .bg-noise {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 256px 256px;
+    }
 
-/* DROP ZONES */
-.drop-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:500px){.drop-row{grid-template-columns:1fr}}
-.dropzone{
-  border:1.5px dashed var(--border);border-radius:12px;
-  padding:24px 16px;text-align:center;cursor:pointer;
-  transition:all .25s;position:relative;overflow:hidden;
-}
-.dropzone:hover,.dropzone.drag{
-  border-color:var(--accent);background:var(--accent)08;
-}
-.dropzone.loaded{border-color:var(--cyan);border-style:solid;background:var(--cyan)06}
-.dz-icon{font-size:28px;margin-bottom:8px;display:block}
-.dz-title{font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:4px}
-.dz-sub{font-size:10px;color:var(--muted);font-family:'Space Mono',monospace}
-.dz-role{
-  font-size:9px;letter-spacing:2px;color:var(--accent);
-  font-family:'Space Mono',monospace;margin-bottom:10px;
-}
-.dz-info{
-  margin-top:10px;font-size:10px;font-family:'Space Mono',monospace;
-  color:var(--cyan);line-height:1.6;
-}
-input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+    /* Layout */
+    .app {
+      position: relative; z-index: 2;
+      max-width: 640px; margin: 0 auto;
+      padding: 0 20px 120px;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
 
-/* LOG */
-.log-box{
-  background:#08080f;border:1px solid var(--border);border-radius:10px;
-  padding:12px;font-family:'Space Mono',monospace;font-size:10px;
-  line-height:1.8;max-height:200px;overflow-y:auto;
-  margin-top:14px;
-}
-.log-box:empty::before{content:'// waiting...';color:var(--muted)}
-.l-ok{color:var(--cyan)}
-.l-warn{color:var(--warn)}
-.l-err{color:var(--error)}
-.l-inf{color:var(--muted)}
-.l-bold{color:#fff;font-weight:700}
+    /* Header */
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 24px 0 16px;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .brand-icon {
+      width: 38px; height: 38px; border-radius: 12px;
+      background: linear-gradient(135deg, rgba(0,210,255,0.15), rgba(168,85,247,0.15));
+      border: 1px solid rgba(0,210,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 20px rgba(0,210,255,0.15);
+    }
+    .brand-icon svg { width: 20px; height: 20px; }
+    .brand-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px; font-weight: 700; letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .brand-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
 
-/* ATOM VISUALIZER */
-.atom-grid{
-  display:flex;gap:4px;flex-wrap:wrap;margin-top:10px;
-}
-.atom-chip{
-  font-size:9px;font-family:'Space Mono',monospace;
-  padding:3px 8px;border-radius:4px;border:1px solid;
-  letter-spacing:1px;
-}
-.atom-keep{background:#00f5d411;border-color:#00f5d444;color:var(--cyan)}
-.atom-replace{background:#ff3e6c11;border-color:#ff3e6c44;color:var(--accent)}
-.atom-calc{background:#ff8c4211;border-color:#ff8c4244;color:var(--accent2)}
+    .lang-toggle {
+      display: flex; gap: 4px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 999px; padding: 3px;
+    }
+    .lang-btn {
+      background: none; border: none; color: var(--text-muted);
+      font-size: 11px; font-weight: 700; padding: 6px 12px;
+      border-radius: 999px; cursor: pointer; transition: all .2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .lang-btn.active { background: rgba(0,210,255,0.12); color: var(--accent); }
 
-/* DIFF TABLE */
-.diff-table{width:100%;border-collapse:collapse;font-size:11px;font-family:'Space Mono',monospace;margin-top:10px}
-.diff-table th{color:var(--muted);font-weight:400;padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);font-size:9px;letter-spacing:2px}
-.diff-table td{padding:6px 8px;border-bottom:1px solid var(--border)88;font-size:10px}
-.diff-table .match{color:var(--cyan)}
-.diff-table .mismatch{color:var(--warn)}
-.diff-table .na{color:var(--muted)}
+    /* Glass Card */
+    .glass-card {
+      background: var(--glass);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+      transition: border-color .3s, box-shadow .3s, transform .3s;
+    }
+    .glass-card:hover {
+      border-color: rgba(255,255,255,0.12);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .glass-card + .glass-card { margin-top: 16px; }
 
-/* PROGRESS */
-.progress-wrap{margin-top:14px}
-.progress-label{font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between}
-.progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .4s ease;width:0%}
+    .section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::before {
+      content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
 
-/* BTN */
-.btn{
-  width:100%;padding:16px;border:none;border-radius:12px;
-  font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
-  letter-spacing:2px;cursor:pointer;transition:all .25s;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-}
-.btn-main{
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#fff;margin-top:8px;
-}
-.btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 24px var(--accent)44}
-.btn-main:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
-.btn-sec{
-  background:transparent;border:1px solid var(--border);
-  color:var(--muted);font-size:12px;padding:10px;margin-top:8px;
-}
-.btn-sec:hover{border-color:var(--cyan);color:var(--cyan)}
+    /* Mode Grid */
+    .mode-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .mode-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 16px;
+      cursor: pointer; transition: all .25s;
+      position: relative; overflow: hidden;
+    }
+    .mode-card::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit;
+      padding: 1px; background: linear-gradient(135deg, transparent, rgba(0,210,255,0.15));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      opacity: 0; transition: opacity .3s;
+    }
+    .mode-card:hover { background: var(--surface-hover); transform: translateY(-2px); }
+    .mode-card:hover::before { opacity: 1; }
+    .mode-card.selected {
+      background: rgba(0,210,255,0.06); border-color: var(--border-hover);
+      box-shadow: 0 0 20px rgba(0,210,255,0.08);
+    }
+    .mode-card.selected::before { opacity: 1; }
+    .mode-icon { font-size: 24px; margin-bottom: 10px; }
+    .mode-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+    .mode-desc { font-size: 10px; color: var(--text-muted); line-height: 1.5; }
+    .mode-badge {
+      position: absolute; top: 10px; right: 10px;
+      font-size: 9px; font-weight: 700; padding: 2px 8px;
+      border-radius: 999px; background: rgba(0,210,255,0.1); color: var(--accent);
+      letter-spacing: 0.05em;
+    }
 
-/* STATUS */
-.status-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:10px;font-family:'Space Mono',monospace;letter-spacing:2px;
-  padding:4px 10px;border-radius:20px;margin-top:4px;
-}
-.sb-idle{background:var(--border);color:var(--muted)}
-.sb-work{background:#ff8c4222;color:var(--warn);border:1px solid var(--warn)44}
-.sb-ok{background:#00f5d422;color:var(--cyan);border:1px solid var(--cyan)44}
-.sb-err{background:#ff3e6c22;color:var(--error);border:1px solid var(--error)44}
-.pulse{animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    /* Upload */
+    .upload-area {
+      border: 1.5px dashed rgba(0,210,255,0.25);
+      border-radius: var(--radius-sm);
+      padding: 32px 20px;
+      text-align: center; cursor: pointer;
+      transition: all .3s; position: relative;
+      background: rgba(0,210,255,0.02);
+    }
+    .upload-area:hover {
+      border-color: rgba(0,210,255,0.5);
+      background: rgba(0,210,255,0.04);
+      box-shadow: 0 0 30px rgba(0,210,255,0.06);
+    }
+    .upload-area.has-file {
+      border-style: solid; border-color: var(--border-hover);
+      background: rgba(0,210,255,0.04);
+    }
+    .upload-area input { display: none; }
+    .upload-icon { font-size: 32px; margin-bottom: 10px; opacity: 0.8; }
+    .upload-text { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    .file-name { font-size: 12px; color: var(--accent); margin-top: 8px; font-weight: 600; word-break: break-all; }
 
-/* WARNING BOX */
-.warn-box{
-  background:#ff8c4208;border:1px solid #ff8c4233;
-  border-radius:10px;padding:12px 14px;
-  font-size:11px;color:var(--warn);font-family:'Space Mono',monospace;
-  line-height:1.7;margin-bottom:16px;
-}
+    /* Status */
+    .status-box {
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px 16px;
+      font-size: 12px; color: var(--text-muted); line-height: 1.6;
+      min-height: 48px; transition: all .3s;
+    }
+    .status-box.working { color: var(--accent); border-color: rgba(0,210,255,0.2); background: rgba(0,210,255,0.03); }
+    .status-box.success { color: var(--success); border-color: rgba(0,232,135,0.2); background: rgba(0,232,135,0.03); }
+    .status-box.error { color: var(--error); border-color: rgba(255,77,106,0.2); background: rgba(255,77,106,0.03); }
 
-/* RESULT */
-.result-box{
-  background:#00f5d408;border:1px solid #00f5d433;
-  border-radius:12px;padding:16px;margin-top:14px;display:none;
-}
-.result-box.show{display:block}
-.result-title{font-size:11px;letter-spacing:3px;color:var(--cyan);font-family:'Space Mono',monospace;margin-bottom:10px}
-.result-stat{display:flex;justify-content:space-between;font-size:10px;font-family:'Space Mono',monospace;padding:4px 0;border-bottom:1px solid #00f5d411}
-.result-stat:last-child{border:none}
-.result-stat span:last-child{color:var(--cyan)}
+    /* Buttons */
+    .btn-primary {
+      width: 100%; border: none; border-radius: 999px; padding: 16px;
+      font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase; color: #000;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      cursor: pointer; position: relative; overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,210,255,0.3), 0 0 0 1px rgba(0,210,255,0.2) inset;
+      transition: transform .15s, box-shadow .3s, filter .3s;
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,210,255,0.45), 0 0 0 1px rgba(0,210,255,0.3) inset;
+      filter: brightness(1.1);
+    }
+    .btn-primary:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+    .btn-primary:disabled {
+      background: #111520; color: var(--text-muted); cursor: not-allowed;
+      box-shadow: none; filter: none;
+    }
 
-footer{text-align:center;font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:40px;letter-spacing:2px}
-</style>
+    .btn-secondary {
+      width: 100%; border: 1px solid rgba(255,255,255,0.12); border-radius: 999px;
+      padding: 14px; background: rgba(255,255,255,0.04); color: var(--text);
+      font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+
+    .btn-purple {
+      background: linear-gradient(135deg, var(--purple), #7c3aed);
+      box-shadow: 0 4px 24px rgba(168,85,247,0.3), 0 0 0 1px rgba(168,85,247,0.2) inset;
+    }
+    .btn-purple:hover:not(:disabled) {
+      box-shadow: 0 8px 32px rgba(168,85,247,0.45), 0 0 0 1px rgba(168,85,247,0.3) inset;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px; opacity: 0; pointer-events: none;
+      transition: opacity .3s;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: all; }
+    .modal-card {
+      background: linear-gradient(180deg, rgba(20,20,35,0.95), rgba(10,10,20,0.98));
+      border: 1px solid var(--border-hover);
+      border-radius: var(--radius); padding: 28px;
+      width: 100%; max-width: 420px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.8), 0 0 0 1px rgba(0,210,255,0.1) inset;
+      transform: translateY(20px) scale(0.96);
+      transition: transform .3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-overlay.active .modal-card { transform: translateY(0) scale(1); }
+    .modal-title {
+      font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700;
+      margin-bottom: 6px; text-align: center;
+    }
+    .modal-desc { font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 24px; line-height: 1.6; }
+    .modal-actions { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+    .modal-btn { width: 100%; border: none; border-radius: 16px; padding: 16px; cursor: pointer; transition: all .2s; text-align: left; display: flex; align-items: center; gap: 12px; }
+    .modal-btn:hover { transform: translateX(4px); }
+    .modal-btn-patch { background: rgba(0,210,255,0.08); border: 1px solid rgba(0,210,255,0.2); color: var(--accent); }
+    .modal-btn-patch:hover { background: rgba(0,210,255,0.12); border-color: rgba(0,210,255,0.4); box-shadow: 0 0 20px rgba(0,210,255,0.1); }
+    .modal-btn-re { background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.2); color: var(--purple); }
+    .modal-btn-re:hover { background: rgba(168,85,247,0.12); border-color: rgba(168,85,247,0.4); box-shadow: 0 0 20px rgba(168,85,247,0.1); }
+    .modal-btn-label { font-weight: 700; font-size: 13px; }
+    .modal-btn-desc { font-size: 10px; opacity: 0.7; margin-top: 2px; }
+    .modal-cancel { text-align: center; font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 8px; transition: color .2s; }
+    .modal-cancel:hover { color: var(--text); }
+
+    /* Tabs */
+    .tab-content { display: none; animation: fadeIn .4s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+    /* Info Page */
+    .info-text { font-size: 13px; line-height: 1.8; color: var(--text-muted); }
+    .info-text strong { color: var(--text); }
+    .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+    .social-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px;
+      display: flex; align-items: center; gap: 10px;
+      transition: all .2s; cursor: pointer; text-decoration: none; color: inherit;
+    }
+    .social-item:hover { border-color: var(--border-hover); background: var(--surface-hover); transform: translateY(-1px); }
+    .social-icon { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; background: rgba(255,255,255,0.05); }
+    .social-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .social-val { font-size: 12px; font-weight: 600; color: var(--text); margin-top: 2px; }
+
+    .donate-card {
+      background: linear-gradient(135deg, rgba(0,210,255,0.05), rgba(168,85,247,0.05));
+      border: 1px solid var(--border-hover); border-radius: var(--radius-sm);
+      padding: 20px; text-align: center; margin-top: 16px;
+    }
+    .donate-title { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+    .donate-num { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: #fff; letter-spacing: 0.02em; }
+    .donate-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+    /* Guide */
+    .step-list { display: flex; flex-direction: column; gap: 0; }
+    .step-item { display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .step-item:last-child { border-bottom: none; }
+    .step-num {
+      width: 32px; height: 32px; min-width: 32px; border-radius: 50%;
+      background: rgba(0,210,255,0.1); border: 1px solid rgba(0,210,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: var(--accent);
+      box-shadow: 0 0 12px rgba(0,210,255,0.1);
+    }
+    .step-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .step-desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.7; }
+    .step-code { display: inline-block; background: rgba(0,210,255,0.07); border: 1px solid rgba(0,210,255,0.2); border-radius: 6px; padding: 2px 8px; font-family: monospace; font-size: 11px; color: var(--accent); margin-top: 4px; }
+
+    .warn-box {
+      background: rgba(255,183,64,0.04); border: 1px solid rgba(255,183,64,0.18);
+      border-radius: var(--radius-sm); padding: 16px; margin-top: 12px;
+    }
+    .warn-title { font-size: 11px; font-weight: 700; color: var(--warn); margin-bottom: 6px; }
+    .warn-box p { font-size: 11.5px; color: var(--text-muted); line-height: 1.65; }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(8,8,16,0.85); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 999px;
+      padding: 6px; display: flex; gap: 4px; z-index: 100;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(0,210,255,0.06) inset;
+    }
+    .nav-btn {
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      border-radius: 999px; padding: 10px 16px; display: flex; align-items: center; gap: 6px;
+      transition: all .2s; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
+    }
+    .nav-btn.active { background: rgba(0,210,255,0.1); color: var(--accent); box-shadow: 0 0 12px rgba(0,210,255,0.08); }
+    .nav-btn:hover:not(.active) { background: rgba(255,255,255,0.04); color: var(--text); }
+
+    /* Progress */
+    .progress-wrap { margin-top: 12px; display: none; }
+    .progress-wrap.visible { display: block; }
+    .progress-bg { background: rgba(0,210,255,0.08); border: 1px solid var(--border); border-radius: 999px; height: 6px; overflow: hidden; }
+    .progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); border-radius: 999px; transition: width .4s ease; width: 0%; box-shadow: 0 0 10px rgba(0,210,255,0.3); }
+    .progress-label { text-align: center; font-size: 10px; color: var(--text-muted); margin-top: 8px; letter-spacing: 0.05em; }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .mode-grid { grid-template-columns: 1fr; }
+      .social-grid { grid-template-columns: 1fr; }
+      .app { padding: 0 14px 120px; }
+    }
+  </style>
 </head>
 <body>
-<div class="noise"></div>
-<div class="wrap">
 
-<header>
-  <div class="logo">D4NZXML × KYTHERA</div>
-  <h1>Container<br>Transplant</h1>
-  <div class="subtitle">// moov hijack · mdat replace · atom recalculate</div>
-</header>
+<div class="bg-layer"></div>
+<div class="bg-noise"></div>
 
-<div class="steps">
-  <div class="step active" id="s1"><div class="step-num">1</div>LOAD FILES</div>
-  <div class="step-arrow">›</div>
-  <div class="step" id="s2"><div class="step-num">2</div>ANALYZE</div>
-  <div class="step-arrow">›</div>
-  <div class="step" id="s3"><div class="step-num">3</div>TRANSPLANT</div>
-  <div class="step-arrow">›</div>
-  <div class="step" id="s4"><div class="step-num">4</div>DOWNLOAD</div>
-</div>
+<div class="app">
 
-<div class="warn-box">
-  ⚠ EXPERIMENTAL — Container transplant hanya berhasil kalau codec donor & target kompatibel (sama-sama H.264 atau sama-sama HEVC). Resolusi boleh beda — tool ini akan recalculate semua atom sizes secara otomatis.
-</div>
-
-<!-- STEP 1: LOAD -->
-<div class="card active-card" id="card1">
-  <div class="card-label">01 — LOAD FILES</div>
-  <div class="drop-row">
-    <div>
-      <div class="dz-role">DONOR (container)</div>
-      <div class="dropzone" id="dz-donor">
-        <input type="file" id="f-donor" accept="*/*">
-        <span class="dz-icon">📦</span>
-        <div class="dz-title">DONOR FILE</div>
-        <div class="dz-sub">video 1080p dari<br>US creator TikTok</div>
-        <div class="dz-info" id="info-donor"></div>
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+      </div>
+      <div>
+        <div class="brand-text">D4nzxml</div>
+        <div class="brand-sub" data-i18n="appSub">Video Tool Pro</div>
       </div>
     </div>
-    <div>
-      <div class="dz-role">TARGET (video lo)</div>
-      <div class="dropzone" id="dz-target">
-        <input type="file" id="f-target" accept="*/*">
-        <span class="dz-icon">🎬</span>
-        <div class="dz-title">TARGET FILE</div>
-        <div class="dz-sub">video lo yang mau<br>di-transplant</div>
-        <div class="dz-info" id="info-target"></div>
+    <div class="lang-toggle">
+      <button class="lang-btn active" data-lang="id" onclick="setLang('id')">ID</button>
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+    </div>
+  </header>
+
+  <!-- TAB: PATCHER -->
+  <div class="tab-content active" id="tab-patcher">
+
+    <!-- Mode Selection -->
+    <div class="glass-card">
+      <div class="section-title" data-i18n="selectMode">Pilih Mode</div>
+      <div class="mode-grid">
+        <div class="mode-card selected" data-mode="1" onclick="selectMode(1)">
+          <div class="mode-icon">🔒</div>
+          <div class="mode-title" data-i18n="mode1Title">Kythera</div>
+          <div class="mode-desc" data-i18n="mode1Desc">Patch metadata aman tanpa re-encode</div>
+          <div class="mode-badge">SAFE</div>
+        </div>
+        <div class="mode-card" data-mode="2" onclick="selectMode(2)">
+          <div class="mode-icon">⚡</div>
+          <div class="mode-title" data-i18n="mode2Title">Deep Structure</div>
+          <div class="mode-desc" data-i18n="mode2Desc">Injeksi advanced sample table</div>
+          <div class="mode-badge">PRO</div>
+        </div>
+        <div class="mode-card" data-mode="3" onclick="selectMode(3)">
+          <div class="mode-icon">🚀</div>
+          <div class="mode-title" data-i18n="mode3Title">Optimize + Deep</div>
+          <div class="mode-desc" data-i18n="mode3Desc">Sanitasi MP4 lalu deep patch</div>
+          <div class="mode-badge">MAX</div>
+        </div>
+        <div class="mode-card" data-mode="4" onclick="selectMode(4)">
+          <div class="mode-icon">🎬</div>
+          <div class="mode-title" data-i18n="mode4Title">itsScale</div>
+          <div class="mode-desc" data-i18n="mode4Desc">Manipulasi timestamp FPS</div>
+          <div class="mode-badge">FPS</div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- STEP 2: ANALYZE -->
-<div class="card" id="card2">
-  <div class="card-label">02 — ATOM ANALYSIS</div>
-  <div id="atom-donor-wrap" style="display:none">
-    <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:6px">DONOR atoms:</div>
-    <div class="atom-grid" id="atom-donor"></div>
-  </div>
-  <div id="atom-target-wrap" style="display:none;margin-top:12px">
-    <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:6px">TARGET atoms:</div>
-    <div class="atom-grid" id="atom-target"></div>
-  </div>
-  <table class="diff-table" id="diff-table" style="display:none">
-    <thead><tr><th>PROPERTY</th><th>DONOR</th><th>TARGET</th><th>STATUS</th></tr></thead>
-    <tbody id="diff-body"></tbody>
-  </table>
-  <div class="log-box" id="log-analyze"></div>
-</div>
+    <!-- Upload -->
+    <div class="glass-card">
+      <div class="section-title" data-i18n="uploadTitle">Upload Video</div>
+      <label class="upload-area" id="uploadArea" for="fileInput">
+        <input type="file" id="fileInput" accept="video/mp4,video/*">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text" data-i18n="dropText">Drop video MP4 atau klik untuk pilih</div>
+        <div class="file-name" id="fileNameDisplay"></div>
+      </label>
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bg"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="progress-label" id="progressLabel">0%</div>
+      </div>
+    </div>
 
-<!-- STEP 3: TRANSPLANT -->
-<div class="card" id="card3">
-  <div class="card-label">03 — TRANSPLANT ENGINE</div>
-  <div class="progress-wrap">
-    <div class="progress-label"><span id="prog-label">standby</span><span id="prog-pct">0%</span></div>
-    <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
-  </div>
-  <div class="log-box" id="log-transplant"></div>
-  <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
-    <div>
-      <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace">STATUS</div>
-      <div class="status-badge sb-idle" id="status-badge">● IDLE</div>
+    <!-- Status & Action -->
+    <div class="glass-card" style="padding: 16px;">
+      <div class="status-box" id="statusBox" data-i18n="statusReady">Siap — pilih mode dan video untuk memulai.</div>
+    </div>
+
+    <button class="btn-primary" id="executeBtn" disabled onclick="onExecuteClick()">
+      <span data-i18n="execute">EKSEKUSI</span>
+    </button>
+
+    <div class="warn-box">
+      <div class="warn-title">⚠️ <span data-i18n="important">Penting</span></div>
+      <p data-i18n="warnText">Video yang diupload ke TikTok tanpa melalui proses patch akan otomatis dikompresi oleh sistem. Selalu gunakan tool ini sebelum upload untuk mempertahankan kualitas HD maksimal.</p>
     </div>
   </div>
-  <button class="btn btn-main" id="btn-transplant" disabled>⚗ EXECUTE TRANSPLANT</button>
-  <button class="btn btn-sec" id="btn-reset">↺ RESET</button>
-</div>
 
-<!-- STEP 4: RESULT -->
-<div class="card" id="card4">
-  <div class="card-label">04 — RESULT</div>
-  <div class="result-box" id="result-box">
-    <div class="result-title">// TRANSPLANT COMPLETE</div>
-    <div id="result-stats"></div>
+  <!-- TAB: PANDUAN -->
+  <div class="tab-content" id="tab-panduan">
+    <div class="glass-card">
+      <div class="section-title" data-i18n="guideTitle">Panduan Penggunaan</div>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div>
+            <div class="step-title" data-i18n="step1Title">Pilih Mode</div>
+            <div class="step-desc" data-i18n="step1Desc">Kythera untuk patch metadata aman. Deep Structure untuk injeksi advanced. Optimize+Deep untuk hasil maksimal. itsScale untuk manipulasi FPS.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div>
+            <div class="step-title" data-i18n="step2Title">Upload File</div>
+            <div class="step-desc" data-i18n="step2Desc">Pilih file video MP4 dari perangkat Anda. Semua proses dilakukan di browser (client-side), tidak ada file yang dikirim ke server.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div>
+            <div class="step-title" data-i18n="step3Title">Eksekusi</div>
+            <div class="step-desc" data-i18n="step3Desc">Klik tombol EKSEKUSI. Pilih "Patch Only" untuk proses instan, atau "Re-encode + Patch" untuk optimasi struktur MP4 terlebih dahulu.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div>
+            <div class="step-title" data-i18n="step4Title">Download & Upload</div>
+            <div class="step-desc" data-i18n="step4Desc">File hasil akan otomatis terunduh. Upload file hasil ke TikTok Studio atau aplikasi TikTok. Jangan gunakan file asli.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="glass-card">
+      <div class="section-title" data-i18n="tipsTitle">Tips</div>
+      <div class="info-text" data-i18n="tipsText">Untuk hasil terbaik pada video berdurasi panjang, gunakan mode <strong>Optimize + Deep</strong>. Mode ini akan merapikan struktur atom MP4 terlebih dahulu sebelum melakukan injeksi sample table, menghasilkan kompatibilitas maksimal dengan TikTok.</div>
+    </div>
   </div>
-  <div class="log-box" id="log-result"></div>
-</div>
+
+  <!-- TAB: INFO -->
+  <div class="tab-content" id="tab-info">
+    <div class="glass-card">
+      <div class="section-title" data-i18n="aboutTitle">Tentang Tool</div>
+      <div class="info-text" data-i18n="infoText">D4nzxml Video Tool Pro adalah utilitas tingkat lanjut untuk memanipulasi metadata dan timestamp video. Tool ini memastikan standarisasi format agar video yang diunggah ke platform media sosial mempertahankan kualitas HD maksimal dan tidak dikompresi ulang secara agresif oleh server.</div>
+      <div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.06);">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+          <span style="font-size:11px; color:var(--text-muted);">Developer</span>
+          <span style="font-size:12px; font-weight:600; color:var(--accent);">D4nzxml</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+          <span style="font-size:11px; color:var(--text-muted);">Versi</span>
+          <span style="font-size:12px; font-weight:600;">5.0</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+          <span style="font-size:11px; color:var(--text-muted);">Engine</span>
+          <span style="font-size:12px; font-weight:600;">Pure JS + FFmpeg.wasm</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span style="font-size:11px; color:var(--text-muted);">Platform</span>
+          <span style="font-size:12px; font-weight:600;">100% Client-side</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card">
+      <div class="section-title" data-i18n="socialTitle">Sosial Media</div>
+      <div class="social-grid">
+        <a class="social-item" href="https://tiktok.com/@dadanpeople" target="_blank" rel="noopener">
+          <div class="social-icon">🎵</div>
+          <div>
+            <div class="social-label">TikTok</div>
+            <div class="social-val">@dadanpeople</div>
+          </div>
+        </a>
+        <a class="social-item" href="https://instagram.com/Dadan ri" target="_blank" rel="noopener">
+          <div class="social-icon">📸</div>
+          <div>
+            <div class="social-label">Instagram</div>
+            <div class="social-val">@Dadan ri</div>
+          </div>
+        </a>
+        <a class="social-item" href="https://t.me/kytheraa_123" target="_blank" rel="noopener">
+          <div class="social-icon">✈️</div>
+          <div>
+            <div class="social-label">Telegram</div>
+            <div class="social-val">@kytheraa_123</div>
+          </div>
+        </a>
+        <div class="social-item" onclick="copyText('+6282129942772')">
+          <div class="social-icon">💰</div>
+          <div>
+            <div class="social-label">Donate DANA</div>
+            <div class="social-val">+6282129942772</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card" style="text-align:center; padding:20px;">
+      <div style="font-size:11px; color:var(--text-muted); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:8px;" data-i18n="donateTitle">Dukung Pengembangan</div>
+      <div style="font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; color:#fff;">+6282129942772</div>
+      <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">DANA / OVO / GoPay</div>
+    </div>
+  </div>
 
 </div>
-<footer>© D4NZXML — KYTHERA CONTAINER TRANSPLANT v1.0</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-title" data-i18n="modalTitle">Pilih Metode Eksekusi</div>
+    <div class="modal-desc" data-i18n="modalDesc">Pilih cara pemrosesan video sesuai kebutuhan Anda.</div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-patch" id="btnPatchOnly" onclick="confirmExecute(true)">
+        <div>
+          <div class="modal-btn-label" data-i18n="patchOnly">Patch Only</div>
+          <div class="modal-btn-desc" data-i18n="patchOnlyDesc">Proses instan tanpa re-encode</div>
+        </div>
+      </button>
+      <button class="modal-btn modal-btn-re" id="btnReencodePatch" onclick="confirmExecute(false)">
+        <div>
+          <div class="modal-btn-label" data-i18n="reencodePatch">Re-encode + Patch</div>
+          <div class="modal-btn-desc" data-i18n="reencodePatchDesc">Optimasi struktur lalu patch metadata</div>
+        </div>
+      </button>
+    </div>
+    <div class="modal-cancel" onclick="closeModal()" data-i18n="cancel">Batal</div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="switchTab('tab-patcher')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <span data-i18n="navPatcher">Patcher</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('tab-panduan')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span data-i18n="navGuide">Panduan</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('tab-info')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span data-i18n="navInfo">Info</span>
+  </button>
+</nav>
 
 <script>
-// ── STATE ─────────────────────────────────────────────────────────────────
-const state = {
-  donorBuf: null, targetBuf: null,
-  donorInfo: null, targetInfo: null,
-  ready: false
+// ═══════════════════════════════════════════
+// TRANSLATIONS
+// ═══════════════════════════════════════════
+const i18n = {
+  id: {
+    appSub: 'Video Tool Pro',
+    selectMode: 'Pilih Mode',
+    mode1Title: 'Kythera', mode1Desc: 'Patch metadata aman tanpa re-encode',
+    mode2Title: 'Deep Structure', mode2Desc: 'Injeksi advanced sample table',
+    mode3Title: 'Optimize + Deep', mode3Desc: 'Sanitasi MP4 lalu deep patch',
+    mode4Title: 'itsScale', mode4Desc: 'Manipulasi timestamp FPS',
+    uploadTitle: 'Upload Video',
+    dropText: 'Drop video MP4 atau klik untuk pilih',
+    execute: 'EKSEKUSI',
+    statusReady: 'Siap — pilih mode dan video untuk memulai.',
+    statusProcessing: 'Memproses...',
+    statusDone: 'Selesai! File berhasil diunduh.',
+    statusError: 'Error:',
+    modalTitle: 'Pilih Metode Eksekusi',
+    modalDesc: 'Pilih cara pemrosesan video sesuai kebutuhan Anda.',
+    patchOnly: 'Patch Only',
+    patchOnlyDesc: 'Proses instan tanpa re-encode',
+    reencodePatch: 'Re-encode + Patch',
+    reencodePatchDesc: 'Optimasi struktur lalu patch metadata',
+    cancel: 'Batal',
+    important: 'Penting',
+    warnText: 'Video yang diupload ke TikTok tanpa melalui proses patch akan otomatis dikompresi oleh sistem. Selalu gunakan tool ini sebelum upload untuk mempertahankan kualitas HD maksimal.',
+    guideTitle: 'Panduan Penggunaan',
+    step1Title: 'Pilih Mode', step1Desc: 'Kythera untuk patch metadata aman. Deep Structure untuk injeksi advanced. Optimize+Deep untuk hasil maksimal. itsScale untuk manipulasi FPS.',
+    step2Title: 'Upload File', step2Desc: 'Pilih file video MP4 dari perangkat Anda. Semua proses dilakukan di browser (client-side), tidak ada file yang dikirim ke server.',
+    step3Title: 'Eksekusi', step3Desc: 'Klik tombol EKSEKUSI. Pilih "Patch Only" untuk proses instan, atau "Re-encode + Patch" untuk optimasi struktur MP4 terlebih dahulu.',
+    step4Title: 'Download & Upload', step4Desc: 'File hasil akan otomatis terunduh. Upload file hasil ke TikTok Studio atau aplikasi TikTok. Jangan gunakan file asli.',
+    tipsTitle: 'Tips',
+    tipsText: 'Untuk hasil terbaik pada video berdurasi panjang, gunakan mode <strong>Optimize + Deep</strong>. Mode ini akan merapikan struktur atom MP4 terlebih dahulu sebelum melakukan injeksi sample table, menghasilkan kompatibilitas maksimal dengan TikTok.',
+    aboutTitle: 'Tentang Tool',
+    infoText: 'D4nzxml Video Tool Pro adalah utilitas tingkat lanjut untuk memanipulasi metadata dan timestamp video. Tool ini memastikan standarisasi format agar video yang diunggah ke platform media sosial mempertahankan kualitas HD maksimal dan tidak dikompresi ulang secara agresif oleh server.',
+    socialTitle: 'Sosial Media',
+    donateTitle: 'Dukung Pengembangan',
+    navPatcher: 'Patcher', navGuide: 'Panduan', navInfo: 'Info'
+  },
+  en: {
+    appSub: 'Video Tool Pro',
+    selectMode: 'Select Mode',
+    mode1Title: 'Kythera', mode1Desc: 'Safe metadata patch without re-encode',
+    mode2Title: 'Deep Structure', mode2Desc: 'Advanced sample table injection',
+    mode3Title: 'Optimize + Deep', mode3Desc: 'Sanitize MP4 then deep patch',
+    mode4Title: 'itsScale', mode4Desc: 'FPS timestamp manipulation',
+    uploadTitle: 'Upload Video',
+    dropText: 'Drop MP4 video or click to select',
+    execute: 'EXECUTE',
+    statusReady: 'Ready — select mode and video to start.',
+    statusProcessing: 'Processing...',
+    statusDone: 'Done! File downloaded successfully.',
+    statusError: 'Error:',
+    modalTitle: 'Select Execution Method',
+    modalDesc: 'Choose how you want to process the video.',
+    patchOnly: 'Patch Only',
+    patchOnlyDesc: 'Instant process without re-encode',
+    reencodePatch: 'Re-encode + Patch',
+    reencodePatchDesc: 'Optimize structure then patch metadata',
+    cancel: 'Cancel',
+    important: 'Important',
+    warnText: 'Videos uploaded to TikTok without patching will be automatically compressed by the system. Always use this tool before uploading to maintain maximum HD quality.',
+    guideTitle: 'User Guide',
+    step1Title: 'Select Mode', step1Desc: 'Kythera for safe metadata patch. Deep Structure for advanced injection. Optimize+Deep for maximum results. itsScale for FPS manipulation.',
+    step2Title: 'Upload File', step2Desc: 'Select an MP4 video file from your device. All processing is done in the browser (client-side); no files are sent to any server.',
+    step3Title: 'Execute', step3Desc: 'Click the EXECUTE button. Choose "Patch Only" for instant processing, or "Re-encode + Patch" to optimize MP4 structure first.',
+    step4Title: 'Download & Upload', step4Desc: 'The processed file will auto-download. Upload the result to TikTok Studio or the TikTok app. Do not use the original file.',
+    tipsTitle: 'Tips',
+    tipsText: 'For best results on longer videos, use <strong>Optimize + Deep</strong> mode. This mode sanitizes the MP4 atom structure before injecting the sample table, ensuring maximum compatibility with TikTok.',
+    aboutTitle: 'About',
+    infoText: 'D4nzxml Video Tool Pro is an advanced utility for manipulating video metadata and timestamps. This tool ensures format standardization so that videos uploaded to social media platforms maintain maximum HD quality and are not aggressively recompressed by servers.',
+    socialTitle: 'Social Media',
+    donateTitle: 'Support Development',
+    navPatcher: 'Patcher', navGuide: 'Guide', navInfo: 'Info'
+  }
 };
 
-// ── UTILS ─────────────────────────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-const fmt = b => b > 1048576 ? (b/1048576).toFixed(1)+'MB' : (b/1024).toFixed(0)+'KB';
-const fmtTime = s => { const m=Math.floor(s/60); return m>0?`${m}m${(s%60).toFixed(1)}s`:`${s.toFixed(2)}s`; }
+let currentLang = 'id';
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (i18n[lang][key]) {
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = i18n[lang][key];
+      else el.innerHTML = i18n[lang][key];
+    }
+  });
+  document.documentElement.lang = lang;
+}
 
-function log(boxId, msg, type='inf') {
-  const box = $(boxId);
-  const line = document.createElement('div');
-  line.className = 'l-'+type;
-  line.textContent = '› ' + msg;
-  box.appendChild(line);
-  box.scrollTop = box.scrollHeight;
+// ═══════════════════════════════════════════
+// UI STATE
+// ═══════════════════════════════════════════
+let currentMode = 1;
+let selectedFile = null;
+let pendingPatchOnly = true;
+
+function selectMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.toggle('selected', parseInt(c.dataset.mode) === mode));
+}
+
+const fileInput = document.getElementById('fileInput');
+const fileNameDisplay = document.getElementById('fileNameDisplay');
+const uploadArea = document.getElementById('uploadArea');
+const executeBtn = document.getElementById('executeBtn');
+const statusBox = document.getElementById('statusBox');
+const progressWrap = document.getElementById('progressWrap');
+const progressBar = document.getElementById('progressBar');
+const progressLabel = document.getElementById('progressLabel');
+
+fileInput.addEventListener('change', e => {
+  selectedFile = e.target.files[0];
+  if (selectedFile) {
+    fileNameDisplay.textContent = '📄 ' + selectedFile.name;
+    uploadArea.classList.add('has-file');
+    executeBtn.disabled = false;
+    setStatus(i18n[currentLang].statusReady, 'ready');
+  } else {
+    fileNameDisplay.textContent = '';
+    uploadArea.classList.remove('has-file');
+    executeBtn.disabled = true;
+  }
+});
+
+function setStatus(msg, type = '') {
+  statusBox.textContent = msg;
+  statusBox.className = 'status-box' + (type ? ' ' + type : '');
 }
 
 function setProgress(pct, label) {
-  $('prog-fill').style.width = pct+'%';
-  $('prog-pct').textContent = pct+'%';
-  $('prog-label').textContent = label;
+  progressWrap.classList.add('visible');
+  progressBar.style.width = pct + '%';
+  progressLabel.textContent = label || (pct + '%');
 }
 
-function setStatus(type, text) {
-  const b = $('status-badge');
-  b.className = 'status-badge sb-'+type;
-  b.textContent = '● '+text;
-  if (type==='work') b.querySelector?.()||b.classList.add('pulse');
-  else b.classList.remove('pulse');
+function hideProgress() {
+  progressWrap.classList.remove('visible');
+  progressBar.style.width = '0%';
 }
 
-function setStep(n) {
-  for(let i=1;i<=4;i++) {
-    const s = $('s'+i);
-    if(i<n) { s.classList.add('done'); s.classList.remove('active'); }
-    else if(i===n) { s.classList.add('active'); s.classList.remove('done'); }
-    else { s.classList.remove('active','done'); }
-  }
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach((b, i) => {
+    const tabs = ['tab-patcher','tab-panduan','tab-info'];
+    b.classList.toggle('active', tabs[i] === tabId);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ── MP4 PARSER ────────────────────────────────────────────────────────────
-function parseMP4(buffer) {
-  const data = new Uint8Array(buffer);
-  const view = new DataView(buffer);
-  const atoms = [];
-
-  function readBox(start, end, depth=0) {
-    let pos = start;
-    while(pos + 8 <= end && pos < data.length) {
-      let size = view.getUint32(pos, false);
-      const type = String.fromCharCode(data[pos+4],data[pos+5],data[pos+6],data[pos+7]);
-      if(size === 0) size = data.length - pos;
-      if(size < 8) break;
-      const atom = { type, start: pos, size, depth, end: pos+size };
-      atoms.push(atom);
-      const containers = ['moov','trak','mdia','minf','stbl','udta','meta','ilst','dinf'];
-      if(containers.includes(type) && depth < 6) {
-        readBox(pos+8, pos+size, depth+1);
-      }
-      pos += size;
-    }
-  }
-  readBox(0, data.length);
-
-  const get = type => atoms.find(a=>a.type===type);
-  const moov = get('moov');
-  const mdat = get('mdat');
-  const ftyp = get('ftyp');
-  const mvhd = get('mvhd');
-  const tkhd = get('tkhd');
-  const mdhd = get('mdhd');
-  const stsd = get('stsd');
-  const stts = get('stts');
-  const stsc = get('stsc');
-  const stsz = get('stsz');
-  const stco = get('stco');
-  const co64 = get('co64');
-
-  let codec = null, width = 0, height = 0, duration = 0, timescale = 1;
-  let sampleCount = 0;
-
-  if(mvhd) {
-    const ver = data[mvhd.start+8];
-    if(ver===0) {
-      timescale = view.getUint32(mvhd.start+20, false);
-      duration  = view.getUint32(mvhd.start+24, false);
-    } else {
-      timescale = view.getUint32(mvhd.start+28, false);
-      duration  = Number(view.getBigUint64(mvhd.start+32, false));
-    }
-  }
-
-  if(stsd) {
-    const entryStart = stsd.start + 16;
-    const t = String.fromCharCode(data[entryStart+4],data[entryStart+5],data[entryStart+6],data[entryStart+7]);
-    codec = t;
-    if(['avc1','avc3','hvc1','hev1','mp4v'].includes(t)) {
-      width  = view.getUint16(entryStart+32, false);
-      height = view.getUint16(entryStart+34, false);
-    }
-  }
-
-  if(stsz) {
-    sampleCount = view.getUint32(stsz.start+16, false);
-  }
-
-  const offsets = stco || co64;
-  let chunkCount = 0;
-  if(offsets) chunkCount = view.getUint32(offsets.start+12, false);
-
-  return {
-    atoms, moov, mdat, ftyp, mvhd, tkhd, mdhd,
-    stsd, stts, stsc, stsz, stco, co64,
-    codec, width, height, duration, timescale,
-    sampleCount, chunkCount,
-    durationSec: timescale > 0 ? duration/timescale : 0,
-    fileSize: buffer.byteLength
-  };
-}
-
-// ── FILE LOAD ─────────────────────────────────────────────────────────────
-function loadFile(file, role) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const buf = e.target.result;
-      const info = parseMP4(buf);
-      info.name = file.name;
-      info.buf = buf;
-      resolve(info);
-    };
-    reader.readAsArrayBuffer(file);
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    setStatus('📋 ' + text + ' ' + (currentLang === 'id' ? 'tersalin!' : 'copied!'), 'success');
+    setTimeout(() => setStatus(i18n[currentLang].statusReady, 'ready'), 2000);
   });
 }
 
-function showFileInfo(info, infoId, dzId, atomId, atomWrapId) {
-  const dz = $(dzId);
-  dz.classList.add('loaded');
-  $(infoId).innerHTML = `
-    <b>${info.name}</b><br>
-    ${fmt(info.fileSize)} · ${info.codec||'?'} · ${info.width}×${info.height}<br>
-    ${fmtTime(info.durationSec)} · ${info.sampleCount} samples
-  `;
+// ═══════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════
+const modalOverlay = document.getElementById('modalOverlay');
 
-  const atomWrap = $(atomWrapId);
-  atomWrap.style.display = 'block';
-  const atomGrid = $(atomId);
-  atomGrid.innerHTML = '';
-  const keepAtoms = ['ftyp','moov','mvhd','trak','tkhd','mdia','mdhd','minf','stbl','stsd','stts','stsc','stsz','stco','co64','udta','meta'];
-  const replaceAtoms = ['mdat'];
-  const calcAtoms = ['stco','co64','stsz','stts','stsc'];
-  info.atoms.filter(a=>a.depth<=1).forEach(a => {
-    const chip = document.createElement('div');
-    chip.className = 'atom-chip ' + (replaceAtoms.includes(a.type)?'atom-replace':calcAtoms.includes(a.type)?'atom-calc':'atom-keep');
-    chip.textContent = a.type;
-    chip.title = `${fmt(a.size)} @ 0x${a.start.toString(16)}`;
-    atomGrid.appendChild(chip);
-  });
-}
-
-function showDiff() {
-  const d = state.donorInfo, t = state.targetInfo;
-  if(!d||!t) return;
-
-  $('diff-table').style.display = 'table';
-  const body = $('diff-body');
-  body.innerHTML = '';
-
-  const rows = [
-    ['Codec', d.codec, t.codec, d.codec===t.codec],
-    ['Resolusi', `${d.width}×${d.height}`, `${t.width}×${t.height}`, true],
-    ['Durasi', fmtTime(d.durationSec), fmtTime(t.durationSec), true],
-    ['Samples', d.sampleCount, t.sampleCount, true],
-    ['Chunks', d.chunkCount, t.chunkCount, true],
-    ['File Size', fmt(d.fileSize), fmt(t.fileSize), true],
-  ];
-
-  rows.forEach(([prop,dv,tv,ok]) => {
-    const tr = document.createElement('tr');
-    const compatible = prop==='Codec' ? ok : true;
-    tr.innerHTML = `
-      <td>${prop}</td>
-      <td>${dv}</td>
-      <td>${tv}</td>
-      <td class="${compatible?'match':'mismatch'}">${compatible?(prop==='Codec'?'✓ COMPATIBLE':'–'):'✗ MISMATCH'}</td>
-    `;
-    body.appendChild(tr);
-  });
-
-  const codecOk = d.codec === t.codec;
-  if(!codecOk) {
-    log('log-analyze', `CODEC MISMATCH: donor=${d.codec} target=${t.codec}`, 'err');
-    log('log-analyze', 'Codec beda — transplant berisiko corrupt. Lanjut paksa? Bisa coba.', 'warn');
+function onExecuteClick() {
+  if (!selectedFile) return;
+  if (currentMode === 3) {
+    // Mode 3: direct execution (always faststart + deep)
+    runExecution(true);
   } else {
-    log('log-analyze', `Codec compatible: ${d.codec} ✓`, 'ok');
+    modalOverlay.classList.add('active');
   }
-  log('log-analyze', `Donor mdat: ${fmt(d.mdat?.size||0)} @ 0x${(d.mdat?.start||0).toString(16)}`, 'inf');
-  log('log-analyze', `Target mdat: ${fmt(t.mdat?.size||0)} @ 0x${(t.mdat?.start||0).toString(16)}`, 'inf');
-  log('log-analyze', `Target samples: ${t.sampleCount}, chunks: ${t.chunkCount}`, 'inf');
-  log('log-analyze', codecOk ? 'Siap transplant ✓' : 'Siap transplant (codec mismatch — experimental)', codecOk?'ok':'warn');
-  state.ready = true;
-  $('btn-transplant').disabled = false;
-  setStatus('idle', 'READY');
-  setStep(3);
 }
 
-// ── FILE EVENTS ───────────────────────────────────────────────────────────
-$('f-donor').addEventListener('change', async e => {
-  const file = e.target.files[0]; if(!file) return;
-  state.ready = false;
-  $('btn-transplant').disabled = true;
-  setStatus('idle', 'IDLE');
-  log('log-analyze', `Loading donor: ${file.name}...`, 'inf');
-  state.donorInfo = await loadFile(file, 'donor');
-  state.donorBuf = state.donorInfo.buf;
-  showFileInfo(state.donorInfo, 'info-donor', 'dz-donor', 'atom-donor', 'atom-donor-wrap');
-  log('log-analyze', `Donor parsed: ${state.donorInfo.codec} ${state.donorInfo.width}×${state.donorInfo.height} ${fmtTime(state.donorInfo.durationSec)}`, 'ok');
-  if(state.targetInfo) showDiff();
-  setStep(2);
-});
+function closeModal(e) {
+  if (!e || e.target === modalOverlay) modalOverlay.classList.remove('active');
+}
 
-$('f-target').addEventListener('change', async e => {
-  const file = e.target.files[0]; if(!file) return;
-  state.ready = false;
-  $('btn-transplant').disabled = true;
-  setStatus('idle', 'IDLE');
-  log('log-analyze', `Loading target: ${file.name}...`, 'inf');
-  state.targetInfo = await loadFile(file, 'target');
-  state.targetBuf = state.targetInfo.buf;
-  showFileInfo(state.targetInfo, 'info-target', 'dz-target', 'atom-target', 'atom-target-wrap');
-  log('log-analyze', `Target parsed: ${state.targetInfo.codec} ${state.targetInfo.width}×${state.targetInfo.height} ${fmtTime(state.targetInfo.durationSec)}`, 'ok');
-  if(state.donorInfo) showDiff();
-  setStep(2);
-});
+function confirmExecute(patchOnly) {
+  pendingPatchOnly = patchOnly;
+  modalOverlay.classList.remove('active');
+  runExecution(patchOnly);
+}
 
-// Drag & drop
-['dz-donor','dz-target'].forEach(id => {
-  const el = $(id);
-  el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag'); });
-  el.addEventListener('dragleave', () => el.classList.remove('drag'));
-  el.addEventListener('drop', e => {
-    e.preventDefault(); el.classList.remove('drag');
-    const file = e.dataTransfer.files[0]; if(!file) return;
-    const input = el.querySelector('input[type=file]');
-    const dt = new DataTransfer(); dt.items.add(file);
-    input.files = dt.files;
-    input.dispatchEvent(new Event('change'));
+// ═══════════════════════════════════════════
+// MP4 BOX PARSING (from popup.js logic)
+// ═══════════════════════════════════════════
+const PATCH_SAMPLE_COUNT = 8573;
+const PATCH_SAMPLE_SIZE = 8;
+const PATCH_SAMPLE_BYTES = new Uint8Array([0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00]);
+const VIDEO_TIMESCALE = 90000;
+const VIDEO_DURATION = 2269500;
+const VIDEO_EDIT_MEDIA_TIME = 3000;
+const VIDEO_SAMPLE_DELTA = 1500;
+const CONTAINER_BOXES = new Set(['moov','trak','mdia','minf','stbl','edts','dinf','udta','meta','ilst']);
+
+function getBoxType(data, offset) {
+  return String.fromCharCode(data[offset], data[offset+1], data[offset+2], data[offset+3]);
+}
+function setBoxType(data, offset, type) {
+  for (let i = 0; i < 4; i++) data[offset+i] = type.charCodeAt(i);
+}
+function assertUint32(value, label) {
+  if (!Number.isFinite(value) || value < 0 || value > 0xffffffff) throw new Error(label + ' out of uint32 range: ' + value);
+}
+function readBox(view, data, offset, end, parentPath = '') {
+  if (offset + 8 > end) throw new Error('Invalid MP4: incomplete box.');
+  const smallSize = view.getUint32(offset, false);
+  const type = getBoxType(data, offset + 4);
+  let size = smallSize, headerSize = 8;
+  if (smallSize === 1) {
+    if (offset + 16 > end) throw new Error('Invalid MP4: box ' + type + ' incomplete.');
+    const high = view.getUint32(offset + 8, false);
+    const low = view.getUint32(offset + 12, false);
+    size = high * 4294967296 + low; headerSize = 16;
+  } else if (smallSize === 0) { size = end - offset; }
+  if (size < headerSize || offset + size > end) throw new Error('Invalid MP4: incorrect size in box ' + type + '.');
+  return { type, offset, size, headerSize, contentStart: offset + headerSize, end: offset + size, path: parentPath ? parentPath + '/' + type : type, data, view, children: [], prefixStart: offset + headerSize, prefixEnd: offset + headerSize };
+}
+function childStartForBox(box) { return box.type === 'meta' ? box.contentStart + 4 : box.contentStart; }
+function parseBoxes(data, view, start = 0, end = data.length, parentPath = '') {
+  const boxes = []; let offset = start;
+  while (offset + 8 <= end) {
+    const box = readBox(view, data, offset, end, parentPath);
+    if (CONTAINER_BOXES.has(box.type)) {
+      const childStart = childStartForBox(box);
+      if (childStart > box.end) throw new Error('Invalid MP4: container ' + box.type + ' too short.');
+      box.prefixStart = box.contentStart; box.prefixEnd = childStart;
+      box.children = parseBoxes(data, view, childStart, box.end, box.path);
+    }
+    boxes.push(box); offset = box.end;
+  }
+  return boxes;
+}
+function findChild(box, type) { return box.children.find(c => c.type === type) || null; }
+function findDescendant(box, path) { let cur = box; for (const t of path) { cur = findChild(cur, t); if (!cur) return null; } return cur; }
+function findTopLevel(boxes, type) { return boxes.find(b => b.type === type) || null; }
+function handlerTypeForTrak(trak) {
+  const hdlr = findDescendant(trak, ['mdia','hdlr']);
+  if (!hdlr || hdlr.offset + 20 > hdlr.end) return null;
+  return getBoxType(hdlr.data, hdlr.offset + 16);
+}
+function parseStsz(stsz) {
+  const sampleSize = stsz.view.getUint32(stsz.offset + 12, false);
+  const count = stsz.view.getUint32(stsz.offset + 16, false);
+  if (sampleSize) return new Array(count).fill(sampleSize);
+  const tableStart = stsz.offset + 20;
+  if (tableStart + count * 4 > stsz.end) throw new Error('Invalid MP4: stsz smaller than declared samples.');
+  const sizes = []; for (let i = 0; i < count; i++) sizes.push(stsz.view.getUint32(tableStart + i * 4, false)); return sizes;
+}
+function parseStco(stco) {
+  const count = stco.view.getUint32(stco.offset + 12, false);
+  const tableStart = stco.offset + 16;
+  if (tableStart + count * 4 > stco.end) throw new Error('Invalid MP4: stco smaller than declared chunks.');
+  const offsets = []; for (let i = 0; i < count; i++) offsets.push(stco.view.getUint32(tableStart + i * 4, false)); return offsets;
+}
+function parseStsc(stsc) {
+  const count = stsc.view.getUint32(stsc.offset + 12, false);
+  const tableStart = stsc.offset + 16;
+  if (tableStart + count * 12 > stsc.end) throw new Error('Invalid MP4: stsc smaller than declared entries.');
+  const rows = []; for (let i = 0; i < count; i++) { const o = tableStart + i * 12; rows.push([stsc.view.getUint32(o,false), stsc.view.getUint32(o+4,false), stsc.view.getUint32(o+8,false)]); } return rows;
+}
+function makeBox(type, payload) {
+  const size = 8 + payload.length; assertUint32(size, type + '.size');
+  const box = new Uint8Array(size); const view = new DataView(box.buffer);
+  view.setUint32(0, size, false); setBoxType(box, 4, type); box.set(payload, 8); return box;
+}
+function concatBytes(parts) {
+  const total = parts.reduce((s, p) => s + p.length, 0); assertUint32(total, 'output_size');
+  const out = new Uint8Array(total); let o = 0; parts.forEach(p => { out.set(p, o); o += p.length; }); return out;
+}
+function boxBytes(box) { return box.data.slice(box.offset, box.end); }
+function boxPayload(box) { return box.data.slice(box.contentStart, box.end); }
+function buildMdhd(box) {
+  const payload = boxPayload(box); const view = new DataView(payload.buffer);
+  if (payload[0] !== 0) throw new Error('Unsupported mdhd version: ' + payload[0]);
+  view.setUint32(12, VIDEO_TIMESCALE, false); view.setUint32(16, VIDEO_DURATION, false); return makeBox('mdhd', payload);
+}
+function buildElst(box) {
+  const payload = boxPayload(box); const view = new DataView(payload.buffer);
+  const version = payload[0]; const entryCount = view.getUint32(4, false);
+  if (version !== 0 || entryCount < 1) throw new Error('This method requires elst version 0 with at least one entry.');
+  view.setUint32(12, VIDEO_EDIT_MEDIA_TIME, false); return makeBox('elst', payload);
+}
+function buildStts(realSampleCount) {
+  const payload = new Uint8Array(4 + 4 + 8 + 8); const view = new DataView(payload.buffer);
+  view.setUint32(4, 2, false); view.setUint32(8, realSampleCount, false); view.setUint32(12, VIDEO_SAMPLE_DELTA, false);
+  view.setUint32(16, PATCH_SAMPLE_COUNT, false); view.setUint32(20, VIDEO_SAMPLE_DELTA, false); return makeBox('stts', payload);
+}
+function buildStsz(originalSizes) {
+  const totalSamples = originalSizes.length + PATCH_SAMPLE_COUNT;
+  const payload = new Uint8Array(4 + 4 + 4 + totalSamples * 4); const view = new DataView(payload.buffer);
+  view.setUint32(8, totalSamples, false); let o = 12;
+  originalSizes.forEach(s => { view.setUint32(o, s, false); o += 4; });
+  for (let i = 0; i < PATCH_SAMPLE_COUNT; i++) { view.setUint32(o, PATCH_SAMPLE_SIZE, false); o += 4; }
+  return makeBox('stsz', payload);
+}
+function buildStsc(originalRows, originalChunkCount) {
+  const rows = originalRows.map(r => [...r]);
+  const last = rows[rows.length - 1];
+  if (!last || last[1] !== 1) rows.push([originalChunkCount + 1, 1, 1]);
+  const payload = new Uint8Array(4 + 4 + rows.length * 12); const view = new DataView(payload.buffer);
+  view.setUint32(4, rows.length, false); let o = 8;
+  rows.forEach(([fc, spc, sdi]) => { view.setUint32(o, fc, false); view.setUint32(o+4, spc, false); view.setUint32(o+8, sdi, false); o += 12; });
+  return makeBox('stsc', payload);
+}
+function buildStco(originalOffsets, delta, auxOffset = null) {
+  const count = originalOffsets.length + (auxOffset === null ? 0 : PATCH_SAMPLE_COUNT);
+  const payload = new Uint8Array(4 + 4 + count * 4); const view = new DataView(payload.buffer);
+  view.setUint32(4, count, false); let o = 8;
+  originalOffsets.forEach(off => { const shifted = off + delta; assertUint32(shifted, 'stco.chunk_offset'); view.setUint32(o, shifted, false); o += 4; });
+  if (auxOffset !== null) { assertUint32(auxOffset, 'stco.aux_sample_offset'); for (let i = 0; i < PATCH_SAMPLE_COUNT; i++) { view.setUint32(o, auxOffset, false); o += 4; } }
+  return makeBox('stco', payload);
+}
+function rebuildBox(box, replacements) {
+  if (replacements.has(box)) return replacements.get(box);
+  if (!box.children.length) return boxBytes(box);
+  const parts = [box.data.slice(box.prefixStart, box.prefixEnd)];
+  box.children.forEach(c => parts.push(rebuildBox(c, replacements)));
+  return makeBox(box.type, concatBytes(parts));
+}
+function collectTrackStcoBoxes(moov) {
+  const stcoBoxes = [];
+  moov.children.filter(c => c.type === 'trak').forEach(trak => {
+    const stbl = findDescendant(trak, ['mdia','minf','stbl']);
+    if (!stbl) return;
+    const co64 = findChild(stbl, 'co64'); if (co64) throw new Error('This method does not yet support MP4 with co64.');
+    const stco = findChild(stbl, 'stco'); if (stco) stcoBoxes.push(stco);
   });
-});
-
-// ── TRANSPLANT ENGINE ─────────────────────────────────────────────────────
-async function doTransplant() {
-  if(!state.ready) return;
-  $('btn-transplant').disabled = true;
-  setStatus('work', 'WORKING');
-  const logId = 'log-transplant';
-  const t0 = performance.now();
-
-  try {
-    const donor = state.donorInfo;
-    const target = state.targetInfo;
-    const targetData = new Uint8Array(target.buf);
-    const targetView = new DataView(target.buf);
-
-    // ── STEP 1: Extract target mdat ───────────────────────────────────────
-    setProgress(10, 'extracting target mdat...');
-    log(logId, 'Step 1: Extracting target mdat...', 'inf');
-    if(!target.mdat) throw new Error('Target mdat tidak ditemukan');
-    const mdatStart = target.mdat.start;
-    const mdatSize  = target.mdat.size;
-    const mdatData  = targetData.slice(mdatStart, mdatStart + mdatSize);
-    log(logId, `Target mdat: ${fmt(mdatSize)} @ 0x${mdatStart.toString(16)}`, 'ok');
-    await tick();
-
-    // ── STEP 2: Extract donor moov ────────────────────────────────────────
-    setProgress(20, 'extracting donor moov...');
-    log(logId, 'Step 2: Extracting donor moov...', 'inf');
-    if(!donor.moov) throw new Error('Donor moov tidak ditemukan');
-    const donorData = new Uint8Array(donor.buf);
-    const donorView = new DataView(donor.buf);
-    let moovData = donorData.slice(donor.moov.start, donor.moov.start + donor.moov.size);
-    log(logId, `Donor moov: ${fmt(moovData.length)} @ 0x${donor.moov.start.toString(16)}`, 'ok');
-    await tick();
-
-    // ── STEP 3: Rebuild moov from target ─────────────────────────────────
-    setProgress(35, 'rebuilding moov from target...');
-    log(logId, 'Step 3: Rebuilding moov metadata from target...', 'inf');
-
-    // We keep donor moov structure but patch key fields from target:
-    // mvhd duration, tkhd width/height/duration, mdhd timescale/duration,
-    // stts, stsc, stsz, stco — all from target
-    const newMoov = await rebuildMoov(donor, target, moovData);
-    log(logId, `Moov rebuilt: ${fmt(newMoov.length)}`, 'ok');
-    await tick();
-
-    // ── STEP 4: Extract donor ftyp ────────────────────────────────────────
-    setProgress(50, 'keeping donor ftyp...');
-    log(logId, 'Step 4: Preserving donor ftyp...', 'inf');
-    let ftypData;
-    if(donor.ftyp) {
-      ftypData = donorData.slice(donor.ftyp.start, donor.ftyp.start + donor.ftyp.size);
-      log(logId, `Donor ftyp preserved: ${fmt(ftypData.length)}`, 'ok');
-    } else {
-      // Build minimal ftyp
-      ftypData = buildFtyp();
-      log(logId, 'Built default ftyp (donor had none)', 'warn');
-    }
-    await tick();
-
-    // ── STEP 5: Recalculate stco offsets ─────────────────────────────────
-    setProgress(65, 'recalculating chunk offsets...');
-    log(logId, 'Step 5: Recalculating stco chunk offsets...', 'inf');
-    const newFileSize = ftypData.length + newMoov.length + mdatData.length;
-    const mdatOffset  = ftypData.length + newMoov.length; // mdat starts here
-    const patchedMoov = patchStco(newMoov, target, mdatOffset, mdatStart);
-    log(logId, `stco recalculated. mdat will be @ 0x${mdatOffset.toString(16)}`, 'ok');
-    log(logId, `New file size: ${fmt(newFileSize)}`, 'inf');
-    await tick();
-
-    // ── STEP 6: Assemble final file ───────────────────────────────────────
-    setProgress(80, 'assembling output...');
-    log(logId, 'Step 6: Assembling output file...', 'inf');
-    const outBuf = new ArrayBuffer(newFileSize);
-    const outData = new Uint8Array(outBuf);
-    let cursor = 0;
-    outData.set(ftypData, cursor); cursor += ftypData.length;
-    outData.set(patchedMoov, cursor); cursor += patchedMoov.length;
-    outData.set(mdatData, cursor);
-    log(logId, `Assembly complete. Total: ${fmt(newFileSize)}`, 'ok');
-    await tick();
-
-    // ── STEP 7: Apply Kythera patches ─────────────────────────────────────
-    setProgress(90, 'applying kythera patches...');
-    log(logId, 'Step 7: Applying Kythera patches (MTLib + encoder + ftyp spoof)...', 'inf');
-    const finalBuf = applyKytheraPatches(outBuf);
-    log(logId, 'Kythera patches applied ✓', 'ok');
-    await tick();
-
-    // ── STEP 8: Download ──────────────────────────────────────────────────
-    setProgress(100, 'done!');
-    log(logId, 'Step 8: Writing output file...', 'inf');
-    const blob = new Blob([finalBuf], {type:'video/mp4'});
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url;
-    a.download = target.name.replace(/\.[^/.]+$/,'') + '_transplanted.mp4';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    const elapsed = (performance.now()-t0)/1000;
-    setStatus('ok', 'SUCCESS');
-    setStep(4);
-
-    // Show results
-    $('result-box').classList.add('show');
-    $('result-stats').innerHTML = `
-      <div class="result-stat"><span>Output Size</span><span>${fmt(finalBuf.byteLength)}</span></div>
-      <div class="result-stat"><span>Target Video</span><span>${target.width}×${target.height} · ${fmtTime(target.durationSec)}</span></div>
-      <div class="result-stat"><span>Donor Container</span><span>${donor.name}</span></div>
-      <div class="result-stat"><span>Codec</span><span>${target.codec}</span></div>
-      <div class="result-stat"><span>Samples Preserved</span><span>${target.sampleCount}</span></div>
-      <div class="result-stat"><span>Processing Time</span><span>${fmtTime(elapsed)}</span></div>
-      <div class="result-stat"><span>Kythera Patches</span><span>MTLib + ftyp + colr ✓</span></div>
-    `;
-    log('log-result', `Transplant complete in ${fmtTime(elapsed)}`, 'ok');
-    log('log-result', `File: ${target.name.replace(/\.[^/.]+$/,'')}_transplanted.mp4`, 'ok');
-    log('log-result', 'Upload ke TikTok Studio sekarang bro!', 'bold');
-
-  } catch(err) {
-    setStatus('err', 'ERROR');
-    log(logId, 'ERROR: ' + err.message, 'err');
-    console.error(err);
-    $('btn-transplant').disabled = false;
-  }
+  return stcoBoxes;
+}
+function buildStcoReplacements(stcoBoxes, videoStco, delta, auxOffset) {
+  const replacements = new Map();
+  stcoBoxes.forEach(stco => { replacements.set(stco, buildStco(parseStco(stco), delta, stco === videoStco ? auxOffset : null)); });
+  return replacements;
+}
+function patchAdvancedSampleTable(arrayBuffer) {
+  const data = new Uint8Array(arrayBuffer); const view = new DataView(arrayBuffer);
+  const topLevel = parseBoxes(data, view);
+  const ftyp = findTopLevel(topLevel, 'ftyp');
+  const moov = findTopLevel(topLevel, 'moov');
+  const mdat = findTopLevel(topLevel, 'mdat');
+  if (!ftyp) throw new Error('Box "ftyp" not found. File must be valid MP4.');
+  if (!moov) throw new Error('Box "moov" not found. File must have complete MP4 metadata.');
+  if (!mdat) throw new Error('Box "mdat" not found. File must contain MP4 media.');
+  const videoTrak = moov.children.find(c => c.type === 'trak' && handlerTypeForTrak(c) === 'vide');
+  if (!videoTrak) throw new Error('Video track not found.');
+  const stbl = findDescendant(videoTrak, ['mdia','minf','stbl']);
+  const mdhd = findDescendant(videoTrak, ['mdia','mdhd']);
+  const elst = findDescendant(videoTrak, ['edts','elst']);
+  const stts = stbl && findChild(stbl, 'stts');
+  const stsc = stbl && findChild(stbl, 'stsc');
+  const stsz = stbl && findChild(stbl, 'stsz');
+  const stco = stbl && findChild(stbl, 'stco');
+  if (!stbl || !mdhd || !elst || !stts || !stsc || !stsz || !stco) throw new Error('MP4 missing required tables: mdhd, elst, stts, stsc, stsz, and stco.');
+  const originalSizes = parseStsz(stsz);
+  const originalStscRows = parseStsc(stsc);
+  const originalChunkOffsets = parseStco(stco);
+  const stcoBoxes = collectTrackStcoBoxes(moov);
+  const preservedTopLevel = topLevel.filter(b => !['ftyp','moov','mdat'].includes(b.type)).map(boxBytes);
+  const fixedReplacements = new Map([[mdhd, buildMdhd(mdhd)], [elst, buildElst(elst)], [stts, buildStts(originalSizes.length)], [stsc, buildStsc(originalStscRows, originalChunkOffsets.length)], [stsz, buildStsz(originalSizes)]]);
+  const placeholderReplacements = new Map(fixedReplacements);
+  buildStcoReplacements(stcoBoxes, stco, 0, 0).forEach((v, k) => placeholderReplacements.set(k, v));
+  const moovPlaceholder = rebuildBox(moov, placeholderReplacements);
+  const preservedBytes = concatBytes(preservedTopLevel);
+  const oldMdatPayloadStart = mdat.contentStart;
+  const oldMdatPayload = data.slice(mdat.contentStart, mdat.end);
+  const newMdatPayloadStart = ftyp.size + moovPlaceholder.length + preservedBytes.length + 8;
+  let delta = newMdatPayloadStart - oldMdatPayloadStart;
+  let auxOffset = newMdatPayloadStart + oldMdatPayload.length;
+  let finalReplacements = new Map(fixedReplacements);
+  buildStcoReplacements(stcoBoxes, stco, delta, auxOffset).forEach((v, k) => finalReplacements.set(k, v));
+  let moovNew = rebuildBox(moov, finalReplacements);
+  const recalculatedMdatPayloadStart = ftyp.size + moovNew.length + preservedBytes.length + 8;
+  delta = recalculatedMdatPayloadStart - oldMdatPayloadStart;
+  auxOffset = recalculatedMdatPayloadStart + oldMdatPayload.length;
+  finalReplacements = new Map(fixedReplacements);
+  buildStcoReplacements(stcoBoxes, stco, delta, auxOffset).forEach((v, k) => finalReplacements.set(k, v));
+  moovNew = rebuildBox(moov, finalReplacements);
+  const mdatPayloadNew = concatBytes([oldMdatPayload, PATCH_SAMPLE_BYTES]);
+  const mdatNew = makeBox('mdat', mdatPayloadNew);
+  const output = concatBytes([boxBytes(ftyp), moovNew, preservedBytes, mdatNew]);
+  return { output, realSamples: originalSizes.length, patchSamples: PATCH_SAMPLE_COUNT, patchSampleSize: PATCH_SAMPLE_SIZE, auxOffset, stcoDelta: delta };
 }
 
-// ── MOOV REBUILD ─────────────────────────────────────────────────────────
-function parseAtomsFull(buf) {
-  const data = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
-  const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
-  const atoms = [];
-  function walk(start, end, depth=0) {
-    let p = start;
-    while(p+8<=end && p<data.length) {
-      const sz = view.getUint32(p,false);
-      const tp = String.fromCharCode(data[p+4],data[p+5],data[p+6],data[p+7]);
-      if(sz<8) break;
-      atoms.push({type:tp, start:p, size:sz, depth});
-      const cont=['moov','trak','mdia','minf','stbl','udta','meta','ilst','dinf'];
-      if(cont.includes(tp)&&depth<8) walk(p+8, p+sz, depth+1);
-      p+=sz;
-    }
-  }
-  walk(0, data.length);
-  return atoms;
-}
-
-function spliceU8(src, start, deleteCount, insert) {
-  const r = new Uint8Array(src.length - deleteCount + insert.length);
-  r.set(src.subarray(0, start), 0);
-  r.set(insert, start);
-  r.set(src.subarray(start + deleteCount), start + insert.length);
-  return r;
-}
-
-function patchParentSizes(moov, delta) {
-  // Re-parse and update all container parents that wrap sample tables
-  const atoms = parseAtomsFull(moov);
-  const view = new DataView(moov.buffer, moov.byteOffset, moov.byteLength);
-  const parents = ['moov','trak','mdia','minf','stbl'];
-  for(const p of parents) {
-    const a = atoms.find(x=>x.type===p);
-    if(a) {
-      const cur = view.getUint32(a.start, false);
-      view.setUint32(a.start, cur + delta, false);
-    }
-  }
-}
-
-async function rebuildMoov(donor, target, donorMoovData) {
-  const targetData = new Uint8Array(target.buf);
-  const targetView = new DataView(target.buf);
-  const getTA = tp => target.atoms.find(a=>a.type===tp);
-
-  let moov = new Uint8Array(donorMoovData.length);
-  moov.set(donorMoovData instanceof Uint8Array ? donorMoovData : new Uint8Array(donorMoovData));
-
-  // 1. Patch timing metadata in-place (no resize needed)
-  {
-    const atoms = parseAtomsFull(moov);
-    const view  = new DataView(moov.buffer, moov.byteOffset, moov.byteLength);
-
-    const dmvhd = atoms.find(a=>a.type==='mvhd');
-    if(dmvhd && target.mvhd) {
-      const tv = target.mvhd.start;
-      if(targetData[tv+8]===0) {
-        view.setUint32(dmvhd.start+20, targetView.getUint32(tv+20,false), false);
-        view.setUint32(dmvhd.start+24, targetView.getUint32(tv+24,false), false);
-      }
-    }
-    const dtkhd = atoms.find(a=>a.type==='tkhd');
-    if(dtkhd && target.tkhd) {
-      const tv = target.tkhd.start;
-      const doff = targetData[tv+8]===0 ? 28 : 36;
-      view.setUint32(dtkhd.start+doff,   targetView.getUint32(tv+doff,false),   false);
-      view.setUint32(dtkhd.start+76,     targetView.getUint32(tv+76,false),     false);
-      view.setUint32(dtkhd.start+80,     targetView.getUint32(tv+80,false),     false);
-    }
-    const dmdhd = atoms.find(a=>a.type==='mdhd');
-    if(dmdhd && target.mdhd) {
-      const tv = target.mdhd.start;
-      if(targetData[tv+8]===0) {
-        view.setUint32(dmdhd.start+20, targetView.getUint32(tv+20,false), false);
-        view.setUint32(dmdhd.start+24, targetView.getUint32(tv+24,false), false);
-      }
-    }
-  }
-
-  // 2. Replace sample tables (stts stsc stsz stco co64) from target
-  const tables = ['stts','stsc','stsz','stco','co64'];
-  for(const tname of tables) {
-    const atoms = parseAtomsFull(moov);
-    const dtbl  = atoms.find(a=>a.type===tname);
-    const ttbl  = getTA(tname);
-    if(!dtbl || !ttbl) { continue; }
-
-    const newTblData = targetData.slice(ttbl.start, ttbl.start + ttbl.size);
-    const sizeDiff   = newTblData.length - dtbl.size;
-
-    moov = spliceU8(moov, dtbl.start, dtbl.size, newTblData);
-    if(sizeDiff !== 0) patchParentSizes(moov, sizeDiff);
-    await tick();
-  }
-
-  return moov;
-}
-
-// ── PATCH STCO OFFSETS ────────────────────────────────────────────────────
-function patchStco(moovBytes, target, newMdatOffset, oldMdatOffset) {
-  const out   = moovBytes instanceof Uint8Array ? moovBytes : new Uint8Array(moovBytes);
-  const ov    = new DataView(out.buffer, out.byteOffset, out.byteLength);
-  const delta = newMdatOffset - oldMdatOffset;
-  if(delta === 0) return out;
-
-  const atoms = parseAtomsFull(out);
-  const stco  = atoms.find(a=>a.type==='stco');
-  const co64  = atoms.find(a=>a.type==='co64');
-
-  if(stco) {
-    const count = ov.getUint32(stco.start+12, false);
-    for(let i=0; i<count; i++) {
-      const off = stco.start + 16 + i*4;
-      ov.setUint32(off, ov.getUint32(off,false) + delta, false);
-    }
-  } else if(co64) {
-    const count = ov.getUint32(co64.start+12, false);
-    for(let i=0; i<count; i++) {
-      const off = co64.start + 16 + i*8;
-      const cur = Number(ov.getBigUint64(off,false));
-      ov.setBigUint64(off, BigInt(cur + delta), false);
-    }
-  }
-  return out;
-}
-
-// ── BUILD DEFAULT FTYP ────────────────────────────────────────────────────
-function buildFtyp() {
+// ═══════════════════════════════════════════
+// KYTHERA PATCH LOGIC
+// ═══════════════════════════════════════════
+function injectMTLib(origBuffer) {
   const enc = new TextEncoder();
-  const brands = ['qt  ','avc1','isom','mp41'];
-  const size = 8 + 4 + 4 + brands.length*4; // header+major+minor+compat
-  const buf = new Uint8Array(size);
-  const view = new DataView(buf.buffer);
-  view.setUint32(0, size, false);
-  buf.set(enc.encode('ftyp'), 4);
-  buf.set(enc.encode('qt  '), 8);
-  view.setUint32(12, 0x20140100, false);
-  brands.forEach((b,i) => buf.set(enc.encode(b), 16+i*4));
-  return buf;
+  const origData = new Uint8Array(origBuffer);
+  const origView = new DataView(origBuffer);
+  const domain = enc.encode('com.apple.quicktime');
+  const keyBytes = enc.encode('MTLib');
+  const valBytes = enc.encode('PyPVGCodec');
+  const meanBox = new Uint8Array(4+4+4+domain.length);
+  new DataView(meanBox.buffer).setUint32(0, meanBox.length, false);
+  meanBox.set(enc.encode('mean'), 4); meanBox.set(domain, 12);
+  const nameBox = new Uint8Array(4+4+4+keyBytes.length);
+  new DataView(nameBox.buffer).setUint32(0, nameBox.length, false);
+  nameBox.set(enc.encode('name'), 4); nameBox.set(keyBytes, 12);
+  const dataBox = new Uint8Array(4+4+4+4+valBytes.length);
+  const dv2 = new DataView(dataBox.buffer);
+  dv2.setUint32(0, dataBox.length, false); dataBox.set(enc.encode('data'), 4);
+  dv2.setUint32(8, 1, false); dv2.setUint32(12, 0, false); dataBox.set(valBytes, 16);
+  const freeformSz = 4+4+meanBox.length+nameBox.length+dataBox.length;
+  const freeform = new Uint8Array(freeformSz);
+  new DataView(freeform.buffer).setUint32(0, freeformSz, false);
+  freeform.set([0x2D,0x2D,0x2D,0x2D], 4);
+  let foff = 8;
+  freeform.set(meanBox, foff); foff += meanBox.length;
+  freeform.set(nameBox, foff); foff += nameBox.length;
+  freeform.set(dataBox, foff);
+  let pos = 0, moovPos = -1, moovSz = 0;
+  while (pos + 8 <= origData.length) {
+    const sz = origView.getUint32(pos, false);
+    const t = String.fromCharCode(origData[pos+4], origData[pos+5], origData[pos+6], origData[pos+7]);
+    if (t === 'moov') { moovPos = pos; moovSz = sz; break; }
+    if (sz < 8) break; pos += sz;
+  }
+  if (moovPos === -1) return { buffer: origBuffer, injected: false, msg: 'moov box not found' };
+  let udtaPos = -1, udtaSz = 0;
+  pos = moovPos + 8; const moovEnd = moovPos + moovSz;
+  while (pos + 8 <= moovEnd) {
+    const sz = origView.getUint32(pos, false);
+    const t = String.fromCharCode(origData[pos+4], origData[pos+5], origData[pos+6], origData[pos+7]);
+    if (t === 'udta') { udtaPos = pos; udtaSz = sz; break; }
+    if (sz < 8) break; pos += sz;
+  }
+  let newBuf;
+  if (udtaPos !== -1) {
+    const insertAt = udtaPos + udtaSz;
+    const newSize = origData.length + freeform.length;
+    newBuf = new ArrayBuffer(newSize);
+    const nd = new Uint8Array(newBuf); const nv = new DataView(newBuf);
+    nd.set(origData.subarray(0, insertAt));
+    nd.set(freeform, insertAt);
+    nd.set(origData.subarray(insertAt), insertAt + freeform.length);
+    nv.setUint32(moovPos, moovSz + freeform.length, false);
+    nv.setUint32(udtaPos, udtaSz + freeform.length, false);
+  } else {
+    const udtaNew = new Uint8Array(8 + freeform.length);
+    new DataView(udtaNew.buffer).setUint32(0, udtaNew.length, false);
+    udtaNew.set(enc.encode('udta'), 4); udtaNew.set(freeform, 8);
+    const insertAt = moovEnd;
+    const newSize = origData.length + udtaNew.length;
+    newBuf = new ArrayBuffer(newSize);
+    const nd = new Uint8Array(newBuf); const nv = new DataView(newBuf);
+    nd.set(origData.subarray(0, insertAt));
+    nd.set(udtaNew, insertAt);
+    nd.set(origData.subarray(insertAt), insertAt + udtaNew.length);
+    nv.setUint32(moovPos, moovSz + udtaNew.length, false);
+  }
+  return { buffer: newBuf, injected: true, msg: '✓ MTLib=PyPVGCodec atom injected' };
 }
-
-// ── KYTHERA PATCHES ───────────────────────────────────────────────────────
-function applyKytheraPatches(arrayBuffer) {
+function patchEncoderStr(data) {
+  const enc = new TextEncoder();
+  const lavf = enc.encode('Lavf');
+  const target = enc.encode('Lavf59.16.100');
+  for (let i = 0; i <= data.length - 16; i++) {
+    if (data[i] === lavf[0] && data[i+1] === lavf[1] && data[i+2] === lavf[2] && data[i+3] === lavf[3]) {
+      if (data[i+4] >= 0x30 && data[i+4] <= 0x39) {
+        let end = i + 4;
+        while (end < data.length && data[end] >= 0x20 && data[end] < 0x7F) end++;
+        const origLen = end - i;
+        for (let j = 0; j < origLen; j++) data[i+j] = j < target.length ? target[j] : 0x00;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+function applyKytheraPatch(arrayBuffer) {
   const data = new Uint8Array(arrayBuffer);
-  const view = new DataView(arrayBuffer);
-  const enc  = new TextEncoder();
-
-  // 1. ftyp → QuickTime
-  for(let i=0;i<=Math.min(data.length-16,64);i+=4) {
-    const tag=String.fromCharCode(data[i+4],data[i+5],data[i+6],data[i+7]);
-    if(tag==='ftyp'){
-      data[i+8]=0x71;data[i+9]=0x74;data[i+10]=0x20;data[i+11]=0x20;
-      view.setUint32(i+12,0x20140100,false);
-      break;
-    }
+  let mdatIdx = -1;
+  for (let i = 0; i <= data.length - 4; i++) {
+    if (data[i] === 0x6D && data[i+1] === 0x64 && data[i+2] === 0x61 && data[i+3] === 0x74) { mdatIdx = i; break; }
   }
-
-  // 2. Encoder string
-  const targets=['Lavf58.76.100','Lavf58.45.100','Lavf57.83.100'];
-  const rep=enc.encode('Lavf59.16.100');
-  for(const t of targets){
-    const s=enc.encode(t);
-    for(let i=0;i<=data.length-s.length;i++){
-      let ok=true;for(let j=0;j<s.length;j++)if(data[i+j]!==s[j]){ok=false;break;}
-      if(ok){data.set(rep,i);break;}
-    }
-  }
-
-  // 3. Z-Payload
-  for(let i=0;i<=data.length-4;i++){
-    if(data[i]===0x6D&&data[i+1]===0x64&&data[i+2]===0x61&&data[i+3]===0x74){
-      for(let j=0;j<128;j++)if(i+10+j<data.length)data[i+10+j]=0x5A;
-      break;
-    }
-  }
-
+  if (mdatIdx === -1) throw new Error('Invalid video structure: mdat not found.');
+  const zTarget = mdatIdx + 10;
+  for (let i = 0; i < 128; i++) if (zTarget + i < data.length) data[zTarget + i] = 0x5A;
+  const mt = injectMTLib(arrayBuffer);
+  if (!mt.injected) throw new Error('MTLib injection failed.');
+  arrayBuffer = mt.buffer;
+  patchEncoderStr(new Uint8Array(arrayBuffer));
   return arrayBuffer;
 }
 
-// ── HELPERS ───────────────────────────────────────────────────────────────
-function tick() { return new Promise(r => setTimeout(r, 20)); }
+// ═══════════════════════════════════════════
+// FFMPEG INTEGRATION
+// ═══════════════════════════════════════════
+let ffmpegLoaded = false;
+let ffmpegInst = null;
 
-// ── EVENTS ────────────────────────────────────────────────────────────────
-$('btn-transplant').addEventListener('click', doTransplant);
+async function loadFFmpeg() {
+  if (ffmpegLoaded) return ffmpegInst;
+  setStatus(i18n[currentLang].statusProcessing + ' (FFmpeg.wasm)...', 'working');
+  const { createFFmpeg } = FFmpeg;
+  const ff = createFFmpeg({ log: false, corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js' });
+  await ff.load();
+  ffmpegLoaded = true; ffmpegInst = ff;
+  return ffmpegInst;
+}
 
-$('btn-reset').addEventListener('click', () => {
-  state.donorBuf = null; state.targetBuf = null;
-  state.donorInfo = null; state.targetInfo = null;
-  state.ready = false;
-  $('btn-transplant').disabled = true;
-  $('log-analyze').innerHTML = '';
-  $('log-transplant').innerHTML = '';
-  $('log-result').innerHTML = '';
-  $('atom-donor-wrap').style.display = 'none';
-  $('atom-target-wrap').style.display = 'none';
-  $('diff-table').style.display = 'none';
-  $('result-box').classList.remove('show');
-  $('info-donor').innerHTML = ''; $('info-target').innerHTML = '';
-  $('dz-donor').classList.remove('loaded'); $('dz-target').classList.remove('loaded');
-  $('f-donor').value=''; $('f-target').value='';
-  setProgress(0,'standby'); setStatus('idle','IDLE'); setStep(1);
-});
+async function runFFmpegFaststart(arrayBuffer) {
+  const ff = await loadFFmpeg();
+  ff.FS('writeFile', 'input.mp4', new Uint8Array(arrayBuffer));
+  await ff.run('-i', 'input.mp4', '-movflags', '+faststart', '-c', 'copy', 'faststart.mp4');
+  const data = ff.FS('readFile', 'faststart.mp4');
+  const result = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+  try { ff.FS('unlink', 'input.mp4'); ff.FS('unlink', 'faststart.mp4'); } catch(e){}
+  return result;
+}
+
+async function runFFmpegItsScale(arrayBuffer, scale = '2') {
+  const ff = await loadFFmpeg();
+  ff.FS('writeFile', 'input.mp4', new Uint8Array(arrayBuffer));
+  await ff.run('-itsscale', scale, '-i', 'input.mp4', '-c', 'copy', 'its.mp4');
+  const data = ff.FS('readFile', 'its.mp4');
+  const result = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+  try { ff.FS('unlink', 'input.mp4'); ff.FS('unlink', 'its.mp4'); } catch(e){}
+  return result;
+}
+
+// ═══════════════════════════════════════════
+// DOWNLOAD HELPER
+// ═══════════════════════════════════════════
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════
+// EXECUTION CONTROLLER
+// ═══════════════════════════════════════════
+async function runExecution(patchOnly) {
+  if (!selectedFile) return;
+  executeBtn.disabled = true;
+  hideProgress();
+
+  try {
+    if (currentMode === 1) {
+      // Kythera
+      setStatus(i18n[currentLang].statusProcessing, 'working');
+      let buffer = await selectedFile.arrayBuffer();
+      if (!patchOnly) {
+        setProgress(30, 'Faststart...');
+        buffer = await runFFmpegFaststart(buffer);
+      }
+      setProgress(70, 'Patching...');
+      const patched = applyKytheraPatch(buffer);
+      setProgress(100, 'Done');
+      downloadBlob(new Blob([patched], { type: 'video/mp4' }), selectedFile.name.replace(/\.[^/.]+$/, '') + '_kythera.mp4');
+      setStatus(i18n[currentLang].statusDone, 'success');
+    }
+    else if (currentMode === 2) {
+      // Deep Structure
+      setStatus(i18n[currentLang].statusProcessing, 'working');
+      let buffer = await selectedFile.arrayBuffer();
+      if (!patchOnly) {
+        setProgress(30, 'Faststart...');
+        buffer = await runFFmpegFaststart(buffer);
+      }
+      setProgress(70, 'Deep patch...');
+      const patch = patchAdvancedSampleTable(buffer);
+      setProgress(100, 'Done');
+      downloadBlob(new Blob([patch.output], { type: 'video/mp4' }), selectedFile.name.replace(/\.[^/.]+$/, '') + '_deep.mp4');
+      setStatus(i18n[currentLang].statusDone, 'success');
+    }
+    else if (currentMode === 3) {
+      // Optimize + Deep (always both)
+      setStatus(i18n[currentLang].statusProcessing, 'working');
+      setProgress(20, 'Faststart...');
+      let buffer = await selectedFile.arrayBuffer();
+      buffer = await runFFmpegFaststart(buffer);
+      setProgress(60, 'Deep patch...');
+      const patch = patchAdvancedSampleTable(buffer);
+      setProgress(100, 'Done');
+      downloadBlob(new Blob([patch.output], { type: 'video/mp4' }), selectedFile.name.replace(/\.[^/.]+$/, '') + '_optimized.mp4');
+      setStatus(i18n[currentLang].statusDone, 'success');
+    }
+    else if (currentMode === 4) {
+      // itsScale
+      setStatus(i18n[currentLang].statusProcessing, 'working');
+      setProgress(30, 'itsScale...');
+      let buffer = await selectedFile.arrayBuffer();
+      buffer = await runFFmpegItsScale(buffer, '2');
+      if (!patchOnly) {
+        setProgress(70, 'Metadata patch...');
+        buffer = applyKytheraPatch(buffer);
+      }
+      setProgress(100, 'Done');
+      downloadBlob(new Blob([buffer], { type: 'video/mp4' }), selectedFile.name.replace(/\.[^/.]+$/, '') + '_itsscale.mp4');
+      setStatus(i18n[currentLang].statusDone, 'success');
+    }
+  } catch (err) {
+    console.error(err);
+    setStatus(i18n[currentLang].statusError + ' ' + err.message, 'error');
+  } finally {
+    executeBtn.disabled = false;
+    setTimeout(hideProgress, 2000);
+  }
+}
+
+// Initialize
+setLang('id');
 </script>
 </body>
 </html>
